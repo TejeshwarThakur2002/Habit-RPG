@@ -28,6 +28,12 @@ module.exports = defineConfig([
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
+    // Resolve each workspace's tsconfig paths, such as the app's `@/` alias.
+    settings: {
+      'import/resolver': {
+        typescript: { project: ['apps/*/tsconfig.json', 'packages/*/tsconfig.json'] },
+      },
+    },
     rules: {
       // SCOPE.md hard rule: no `any` without an eslint-disable comment that explains why.
       '@typescript-eslint/no-explicit-any': 'error',

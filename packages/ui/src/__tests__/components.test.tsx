@@ -10,7 +10,7 @@ describe('Button', () => {
   it('is a labelled button that fires onPress', async () => {
     const onPress = jest.fn();
     await render(<Button label="Buy" onPress={onPress} />);
-    fireEvent.press(screen.getByRole('button', { name: 'Buy' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Buy' }));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
@@ -19,7 +19,7 @@ describe('Button', () => {
     await render(<Button label="Buy" disabled onPress={onPress} />);
     const button = screen.getByRole('button', { name: 'Buy' });
     expect(button).toBeDisabled();
-    fireEvent.press(button);
+    await fireEvent.press(button);
     expect(onPress).not.toHaveBeenCalled();
   });
 
@@ -61,7 +61,7 @@ describe('SyncPill', () => {
   it('opens the sync details when tapped', async () => {
     const onPress = jest.fn();
     await render(<SyncPill status="offline" waiting={2} onPress={onPress} />);
-    fireEvent.press(screen.getByRole('button', { name: 'Offline · 2 waiting' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Offline · 2 waiting' }));
     expect(onPress).toHaveBeenCalled();
   });
 });
@@ -79,7 +79,7 @@ describe('small components', () => {
     expect(screen.getByRole('header', { name: 'Your Hero' })).toBeOnTheScreen();
     expect(screen.getByText('128 gold')).toBeOnTheScreen();
     expect(screen.getByLabelText('STR 14')).toBeOnTheScreen();
-    fireEvent.press(screen.getByRole('button', { name: 'INT 19' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'INT 19' }));
     expect(onPress).toHaveBeenCalled();
   });
 });
