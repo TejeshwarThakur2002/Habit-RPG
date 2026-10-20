@@ -130,3 +130,13 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **Reduce Motion** comes from `useReduceMotion()`: the system setting, unless the in-app override (`ReduceMotionProvider`, set from Settings in P2) forces it on or off. Animated components skip straight to the end state when it is on.
 - **Progress bars expose `accessibilityValue={{ text: "42 of 50" }}`**: the accessibility lint rule allows numbers or text, not both, and the text form reads naturally.
 - **The gallery** is the route `/dev/gallery`, linked from the home screen only in development and redirecting home in production builds.
+
+## D14. Game components (2026-10-20)
+
+- **`react-native-svg` 15.16.0** is added (via `npx expo install`) for the pixel check mark and, next, the sprites.
+- **No `shapeRendering="crispEdges"`.** SCOPE.md section 5.2 asks for it on sprites, but `react-native-svg` has no such prop. Pixel art stays sharp on native as long as every cell is a whole-unit `Rect` drawn at a whole-number scale, so sprites will be drawn that way. The design canvas's check-mark path also traced over itself and filled almost nothing, so the check is drawn as a 7 × 7 grid of 2-unit cells instead.
+- **HabitRow** is a `checkbox` with its checked state exposed, a label that reads like the SCOPE.md section 5.10 example, and an "Edit" screen-reader action alongside long press. It is memoised for long lists.
+- **ShopItem's states come in as data** (`buyable`, `expensive` with gold needed, `owned`, `equipped`, `locked` with unlock level), matching `canBuy` in `game-core`. A too-expensive item keeps its effect text and adds "Need N more gold" after it.
+- **Heatmap input** is 84 daily counts, oldest first, one Monday-to-Sunday week after another. The grid is a single accessible image described by a summary sentence; the Less/More legend is hidden from screen readers because the summary already says it.
+- **Numbers like "1,240"** are formatted with a small helper rather than `toLocaleString`, so they look the same on every device whatever its locale.
+- **Testing:** React Native Testing Library 14 makes `fireEvent` async, so every call is awaited; overlapping ones break the following tests. ESLint now resolves each workspace's tsconfig paths, including the app's `@/` alias.
