@@ -1,32 +1,17 @@
-import { Button, ScreenHeader, colors, spacing, type } from '@habit-rpg/ui';
-import { StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useState } from 'react';
 
 import { db } from '@/db/client';
-import { updateSettings } from '@/db/queries/settings';
+import { createHero } from '@/db/queries/local-data';
+import { OnboardingView } from '@/features/onboarding/onboarding-view';
+import { deviceTimeZone } from '@/lib/device';
 
-// Placeholder: onboarding (hero name, class, time zone) is the next Phase 2 PR. Only a
-// half-finished demo can reach this screen today, so it offers a way back to sign-in.
 export default function Onboarding() {
-  const insets = useSafeAreaInsets();
+  const [detected] = useState(deviceTimeZone);
+  // createHero marks onboarding done, and the route guard then opens the tabs.
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 16 }]}>
-      <ScreenHeader title="Create your hero" />
-      <Text style={type.secondary}>Onboarding arrives in the next update.</Text>
-      <Button
-        label="Back to sign in"
-        variant="secondary"
-        onPress={() => updateSettings(db, { demoMode: false, onboardingDone: false })}
-      />
-    </View>
+    <OnboardingView
+      detectedTimeZone={detected}
+      onFinish={(input) => createHero(db, { ...input, now: Date.now() })}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    gap: spacing.section,
-    paddingHorizontal: spacing.screenX,
-    backgroundColor: colors.bg,
-  },
-});
