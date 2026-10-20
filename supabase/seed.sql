@@ -1,0 +1,1 @@
+-- Local development seed data (SCOPE.md section 10). Demo rows arrive in P3.
