@@ -9,3 +9,5 @@ export * from './components/habit-row';
 export * from './components/heatmap';
 export * from './components/party';
 export * from './components/shop-item';
+export * from './components/inputs';
+export * from './components/overlays';

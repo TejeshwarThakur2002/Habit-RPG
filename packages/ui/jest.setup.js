@@ -17,3 +17,9 @@ jest.mock('react-native-reanimated', () => {
     useReducedMotion: () => false,
   };
 });
+
+// Safe-area insets come from native code; its own Jest mock reports zero insets.
+jest.mock(
+  'react-native-safe-area-context',
+  () => require('react-native-safe-area-context/jest/mock').default,
+);
