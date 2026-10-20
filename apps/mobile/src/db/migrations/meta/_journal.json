@@ -8,6 +8,13 @@
       "when": 1792510350590,
       "tag": "0000_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792512603182,
+      "tag": "0001_add_local_only_setting",
+      "breakpoints": true
     }
   ]
 }

@@ -197,4 +197,6 @@ export const settings = sqliteTable('settings', {
   reduceMotion: text('reduce_motion').$type<'system' | 'on' | 'off'>().notNull().default('system'),
   onboardingDone: bool('onboarding_done').notNull().default(false),
   demoMode: bool('demo_mode').notNull().default(false),
+  /** Playing without an account: a real local hero, linked to an account in P3 (D19). */
+  localOnly: bool('local_only').notNull().default(false),
 });

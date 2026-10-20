@@ -23,6 +23,7 @@ describe('settings', () => {
       reduceMotion: 'system',
       onboardingDone: false,
       demoMode: false,
+      localOnly: false,
     });
     expect(updateSettings(db, { reduceMotion: 'on' }).reduceMotion).toBe('on');
     expect(getSettings(db).reduceMotion).toBe('on');
