@@ -2,7 +2,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { MIN_TOUCH, borders, colors, radii, type, type ColorToken } from '../tokens';
 
-export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error';
+/** `local`: nothing to sync yet, for the demo and play without an account (D20). */
+export type SyncStatus = 'synced' | 'syncing' | 'offline' | 'error' | 'local';
 
 export interface SyncPillProps {
   status: SyncStatus;
@@ -17,6 +18,7 @@ const DOT: Record<SyncStatus, ColorToken> = {
   syncing: 'gold',
   offline: 'gold',
   error: 'red',
+  local: 'teal',
 };
 
 export function syncPillText(status: SyncStatus, waiting = 0): string {
@@ -29,6 +31,8 @@ export function syncPillText(status: SyncStatus, waiting = 0): string {
       return `Offline · ${waiting} waiting`;
     case 'error':
       return 'Sync failed';
+    case 'local':
+      return 'Saved on this phone';
   }
 }
 

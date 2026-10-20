@@ -1,10 +1,8 @@
-import { addDatabaseChangeListener } from 'expo-sqlite';
-import { useEffect, useState } from 'react';
-
 import { db } from '@/db/client';
 import { getProfile } from '@/db/queries/hero';
 import { getSettings } from '@/db/queries/settings';
 import { LOCAL_USER_ID, type AppDb } from '@/db/types';
+import { useDbQuery } from '@/db/use-db-query';
 
 import { decideArea, type AppArea } from './route';
 
@@ -25,10 +23,5 @@ export function readArea(database: AppDb): AppArea {
  * every database change.
  */
 export function useAppArea(): AppArea {
-  const [area, setArea] = useState(() => readArea(db));
-  useEffect(() => {
-    const subscription = addDatabaseChangeListener(() => setArea(readArea(db)));
-    return () => subscription.remove();
-  }, []);
-  return area;
+  return useDbQuery(() => readArea(db));
 }

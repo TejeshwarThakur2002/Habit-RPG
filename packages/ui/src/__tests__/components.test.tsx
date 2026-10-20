@@ -56,6 +56,7 @@ describe('SyncPill', () => {
     expect(syncPillText('syncing')).toBe('Syncing...');
     expect(syncPillText('offline', 3)).toBe('Offline · 3 waiting');
     expect(syncPillText('error')).toBe('Sync failed');
+    expect(syncPillText('local')).toBe('Saved on this phone');
   });
 
   it('opens the sync details when tapped', async () => {
