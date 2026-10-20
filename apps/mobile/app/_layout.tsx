@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { DatabaseGate } from '@/db/database-gate';
+import { useAppArea } from '@/features/session/use-session';
 
 // Keep the splash screen up until fonts load, so text never flashes in a fallback font.
 void SplashScreen.preventAutoHideAsync();
@@ -36,10 +37,29 @@ export default function RootLayout() {
     <>
       <StatusBar style="light" />
       <DatabaseGate>
-        <Stack
-          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}
-        />
+        <GuardedStack />
       </DatabaseGate>
     </>
+  );
+}
+
+/** Only the routes for the current area are reachable (SCOPE.md section 5.3, route guards). */
+function GuardedStack() {
+  const area = useAppArea();
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+      <Stack.Protected guard={area === 'sign-in'}>
+        <Stack.Screen name="(auth)/sign-in" />
+      </Stack.Protected>
+      <Stack.Protected guard={area === 'onboarding'}>
+        <Stack.Screen name="(auth)/onboarding" />
+      </Stack.Protected>
+      <Stack.Protected guard={area === 'tabs'}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+      <Stack.Protected guard={__DEV__}>
+        <Stack.Screen name="dev/gallery" />
+      </Stack.Protected>
+    </Stack>
   );
 }
