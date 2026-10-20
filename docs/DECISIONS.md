@@ -140,3 +140,12 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **Heatmap input** is 84 daily counts, oldest first, one Monday-to-Sunday week after another. The grid is a single accessible image described by a summary sentence; the Less/More legend is hidden from screen readers because the summary already says it.
 - **Numbers like "1,240"** are formatted with a small helper rather than `toLocaleString`, so they look the same on every device whatever its locale.
 - **Testing:** React Native Testing Library 14 makes `fireEvent` async, so every call is awaited; overlapping ones break the following tests. ESLint now resolves each workspace's tsconfig paths, including the app's `@/` alias.
+
+## D15. Overlays and form controls (2026-10-20)
+
+- **Modal and BottomSheet wrap React Native's own `Modal`** (fade for dialogs, slide for sheets, no animation when Reduce Motion is on) rather than adding a bottom-sheet library; the app's sheets are short forms that don't need drag-to-resize. If the habit sheet later needs gestures, `@gorhom/bottom-sheet` is the candidate and gets its own entry here.
+- **Screen readers can always close an overlay:** both mark themselves modal (`accessibilityViewIsModal`), which hides the tap-outside backdrop from VoiceOver, so both also handle the VoiceOver escape gesture (`onAccessibilityEscape`); Android's back button closes them through `onRequestClose`.
+- **Toast** is presentational: the message is a polite `alert`, an optional action (Undo) sits beside it, and it calls `onDismiss` after 5 seconds (SCOPE.md section 5.6). Which toast is showing will live in the Zustand UI store in P2.
+- **SegmentedControl** is a `tablist` of `tab`s with the selected one announced; each segment is at least 44 pt tall. **TextField** shows a character count when it has a `maxLength`, and an error replaces its hint and is announced.
+- **`react-native-safe-area-context`** is a peer dependency of `packages/ui` (the sheet pads above the home indicator); its own Jest mock reports zero insets.
+- **`StyleSheet.absoluteFillObject` is gone in React Native 0.88**; use `StyleSheet.absoluteFill`.
