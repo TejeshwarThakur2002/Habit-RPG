@@ -12,9 +12,12 @@ import {
   type ReduceMotionSetting,
 } from '@habit-rpg/ui';
 import { Redirect } from 'expo-router';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { GameComponentSections } from '@/features/dev/game-sections';
+import { GallerySection as Section } from '@/features/dev/gallery-section';
 
 // Dev-only gallery of every shared component in every state (SCOPE.md section 11, P1).
 export default function Gallery() {
@@ -89,25 +92,14 @@ export default function Gallery() {
             <StatChip label="INT" value={19} onPress={() => undefined} />
           </View>
         </Section>
+        <GameComponentSections />
       </ScrollView>
     </ReduceMotionProvider>
-  );
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <View style={styles.section}>
-      <Text accessibilityRole="header" style={type.sectionTitle}>
-        {title}
-      </Text>
-      {children}
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { paddingHorizontal: spacing.screenX, paddingBottom: 48, gap: spacing.section },
-  section: { gap: spacing.row },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.row, alignItems: 'center' },
 });
