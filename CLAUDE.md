@@ -10,9 +10,17 @@ and licences: [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Current phase
 
-**P0 Setup and tooling** (SCOPE.md section 11). Done: docs, workspace, Expo app, lint/format/hooks,
-test runners, CI, local Supabase. Still open: booting on the iOS simulator and Android emulator,
-and creating the hosted Supabase project. Next: **P1** game rules, UI kit and sprites.
+**P1 Game rules, UI kit and sprites** (SCOPE.md section 11). P0 is done: the app boots on the iOS
+simulator and the Android emulator, CI is green on `main`, and `supabase start` works. Still
+deferred from P0: creating the hosted Supabase project (ask the owner first).
+
+P1 order: `game-core` (rewards, levels and HP; then dates, streaks and day close; then gear, boss
+damage and golden test vectors), then `packages/ui` with the dev gallery, then `packages/sprites`.
+Done when the gallery shows every component and state and `game-core` has 90%+ coverage (enforced
+by `vitest --coverage` thresholds).
+
+On this Mac the Android emulator renders black with its default GPU mode; start it with
+`emulator -avd Medium_Phone_API_37.0 -gpu swiftshader_indirect`.
 
 ## Stack
 

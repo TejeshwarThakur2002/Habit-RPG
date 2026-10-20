@@ -89,3 +89,14 @@ pnpm 12 does not run dependency install scripts unless they are approved in `pnp
 - **`supabase/config.toml` changes from the defaults:** `project_id = "habit-rpg"`; Storage turned off because the app stores no files; Auth `site_url` and redirect URLs set to the app scheme `habitrpg://`. Email sign-in uses 6-digit codes (the CLI default `otp_length = 6`), matching SCOPE.md section 9.5.
 - **CI:** a third job, `supabase`, starts the stack without the services the tests don't need, then runs `supabase db reset` so every migration and the seed are applied from scratch on each PR. pgTAP and Deno tests join this job in P3.
 - **Hosted project:** not created yet. When it is, it goes in region `ca-central-1` (D1), and only its URL and publishable key go in the app (`.env.example`).
+
+## D10. Game-core rule details the scope leaves open (2026-10-20)
+
+SCOPE.md section 3 gives the formulas; these are the choices where it does not say exactly how.
+
+- **Bad habits ignore difficulty.** The difficulty table lists "Bad habit" as its own row (5 XP, 2 gold, 8 HP), so a "don't" quest always uses those values, even though the habit row still stores a difficulty.
+- **Crit hash is 32-bit FNV-1a** over the completion id's UTF-16 code units (`Math.imul`, unsigned). It is tiny, has published test vectors (checked in the tests), and gives identical results in Hermes and Deno.
+- **Integer arithmetic for rewards.** `xp` is computed as one integer fraction, `base * streak% * (200 + INT) * bonus% / (100 * 200 * 100)`, then rounded halves-up; boss damage the same way. This avoids floating-point drift such as `10 * 1.05` landing just under or over `.5` on different engines.
+- **Gear XP bonuses multiply last.** The Wizard Hat's "+10% XP on Mind habits" multiplies the XP after the streak and INT bonuses.
+- **Rounding on faint:** gold lost is `floor(gold * 25%)` and HP returns at `floor(max_hp * 50%)`.
+- **Late completions** skip the streak multiplier entirely (multiplier 1.0); INT and gear bonuses still apply.
