@@ -10,6 +10,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { DatabaseGate } from '@/db/database-gate';
+
 // Keep the splash screen up until fonts load, so text never flashes in a fallback font.
 void SplashScreen.preventAutoHideAsync();
 
@@ -33,7 +35,11 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
+      <DatabaseGate>
+        <Stack
+          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}
+        />
+      </DatabaseGate>
     </>
   );
 }
