@@ -1,0 +1,5 @@
+pnpm-lock.yaml
+coverage/
+.expo/
+# The scope is the owner's source document; keep its formatting as written.
+docs/SCOPE.md
