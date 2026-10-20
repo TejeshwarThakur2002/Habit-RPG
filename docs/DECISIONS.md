@@ -149,3 +149,13 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **SegmentedControl** is a `tablist` of `tab`s with the selected one announced; each segment is at least 44 pt tall. **TextField** shows a character count when it has a `maxLength`, and an error replaces its hint and is announced.
 - **`react-native-safe-area-context`** is a peer dependency of `packages/ui` (the sheet pads above the home indicator); its own Jest mock reports zero insets.
 - **`StyleSheet.absoluteFillObject` is gone in React Native 0.88**; use `StyleSheet.absoluteFill`.
+
+## D16. Sprites (2026-10-20)
+
+- **One shared palette, character keys.** Every sprite is an array of equal-length strings; each character is a key into one palette (`packages/sprites/src/palette.ts`) and `.` is transparent. This is the scope's "palette-index matrices" in a form that is easy to read and edit as text. Tests check every matrix's size (heroes and gear 10 × 12, bosses 12 × 8) and that every character is in the palette.
+- **The Knight and the Procrastination Slime are copied cell for cell from the design canvas**; the Mage, Rogue, six gear overlays and seven other bosses are original art in the same chunky style. Nothing is third-party, so `docs/ASSETS.md` gains no rows. The canvas Knight uses 8 colours with no separate outline colour; the art follows the canvas rather than the "3 to 5 colours" line in SCOPE.md section 5.2.
+- **Heroes have no weapon of their own.** The canvas Knight holds a sword; here the sword is the Iron Sword overlay, so equipping and unequipping it changes the sprite as F5 requires.
+- **Gear layers:** capes draw behind the hero, everything else in front, in shop order.
+- **Rendering:** each sprite is one SVG whose `viewBox` is in cells, so every rectangle sits on whole units; neighbouring same-colour cells in a row merge into one rectangle (a sprite draws about 30 rectangles instead of 120). The on-screen cell size should be a whole number of points.
+- **A defeated boss** is drawn in greys of the same brightness and its accessible name says "defeated"; the visible "Defeated!" label is on the BossCard.
+- **`HeroClass`** (`knight` | `mage` | `rogue`) now lives in `game-core`, next to the other domain types.
