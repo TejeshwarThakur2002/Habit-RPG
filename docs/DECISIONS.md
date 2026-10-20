@@ -120,3 +120,13 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **A defeated boss stays defeated** when a member undoes a completion. SCOPE.md section 9.4 says an undo gives the damage back, but taking back a victory after members may have claimed the +50 gold would be confusing and could double-pay; undoing still refunds damage while the boss is alive.
 - **Party codes** are generated from a caller-supplied random source (the server passes a crypto RNG), keeping `game-core` free of randomness so it stays deterministic and testable.
 - **Golden vectors** live in `packages/game-core/golden/vectors.json`. Every expected value is worked out by hand from the formulas (each case names its arithmetic), not produced by running `game-core`. Vitest checks them now; the Deno Edge Function tests load the same file in P3.
+
+## D13. UI foundation (2026-10-20)
+
+- **Fonts load with `useFonts` in the root layout**, holding the splash screen until they are ready. This is the method that works in Expo Go; the `expo-font` config plugin (fonts embedded at build time) only works in development builds, so it can replace this once the app moves to one. If fonts fail to load, the app continues with system fonts rather than staying on the splash screen.
+- **Versions added:** `@expo-google-fonts/pixelify-sans` and `@expo-google-fonts/inter` 0.4.2, `expo-font` 58.0.8, `expo-splash-screen` 58.0.10, `react-native-reanimated` 4.7.1, `react-native-worklets` 0.13.0 (all via `npx expo install`).
+- **`packages/ui` is a React Native package:** `react`, `react-native` and `react-native-reanimated` are peer dependencies (the app provides them) and dev dependencies (for its own type-check and tests). It has its own Jest config with the `jest-expo` preset.
+- **Reanimated under Jest uses a small hand-written mock** (`packages/ui/jest.setup.js`, shared by the app's Jest config). Reanimated 4.7's own mock imports the native module and fails, and its web resolver needs `react-native-web`, which this app does not use. The mock covers only the APIs `packages/ui` uses and jumps animations to their final values; extend it when a component uses more.
+- **Reduce Motion** comes from `useReduceMotion()`: the system setting, unless the in-app override (`ReduceMotionProvider`, set from Settings in P2) forces it on or off. Animated components skip straight to the end state when it is on.
+- **Progress bars expose `accessibilityValue={{ text: "42 of 50" }}`**: the accessibility lint rule allows numbers or text, not both, and the text form reads naturally.
+- **The gallery** is the route `/dev/gallery`, linked from the home screen only in development and redirecting home in production builds.
