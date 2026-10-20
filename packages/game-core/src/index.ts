@@ -2,5 +2,8 @@
 // No runtime dependencies, no clock and no device time zone: callers pass everything in.
 export * from './constants';
 export * from './character';
+export * from './dates';
+export * from './day-close';
 export { clamp, divRound, hash32 } from './math';
 export * from './rewards';
+export * from './streaks';
