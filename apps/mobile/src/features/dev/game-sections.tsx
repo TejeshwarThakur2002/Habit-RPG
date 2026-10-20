@@ -9,6 +9,7 @@ import {
   radii,
   type ShopItemState,
 } from '@habit-rpg/ui';
+import { BossSprite } from '@habit-rpg/sprites';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -43,7 +44,7 @@ const SHOP_STATES: { name: string; effect: string; price: number; state: ShopIte
   },
 ];
 
-/** Placeholder art until packages/sprites lands. */
+/** Placeholder shop icons until item icons are drawn (P2). */
 function Block({ color, size }: { color: string; size: number }) {
   return <View style={[styles.block, { backgroundColor: color, width: size, height: size }]} />;
 }
@@ -94,14 +95,14 @@ export function GameComponentSections() {
           name="Procrastination Slime"
           hp={1240}
           maxHp={2000}
-          sprite={<Block color={colors.bossGreen} size={64} />}
+          sprite={<BossSprite boss="procrastination-slime" cell={12} />}
         />
         <BossCard
           name="Snooze Goblin"
           hp={0}
           maxHp={2000}
           defeated
-          sprite={<Block color={colors.muted} size={64} />}
+          sprite={<BossSprite boss="snooze-goblin" cell={12} defeated />}
         />
       </GallerySection>
 
