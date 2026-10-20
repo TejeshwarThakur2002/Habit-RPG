@@ -17,6 +17,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GameComponentSections } from '@/features/dev/game-sections';
+import { OverlaySections } from '@/features/dev/overlay-sections';
 import { GallerySection as Section } from '@/features/dev/gallery-section';
 
 // Dev-only gallery of every shared component in every state (SCOPE.md section 11, P1).
@@ -93,6 +94,7 @@ export default function Gallery() {
           </View>
         </Section>
         <GameComponentSections />
+        <OverlaySections />
       </ScrollView>
     </ReduceMotionProvider>
   );
