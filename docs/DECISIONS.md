@@ -100,3 +100,14 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **Gear XP bonuses multiply last.** The Wizard Hat's "+10% XP on Mind habits" multiplies the XP after the streak and INT bonuses.
 - **Rounding on faint:** gold lost is `floor(gold * 25%)` and HP returns at `floor(max_hp * 50%)`.
 - **Late completions** skip the streak multiplier entirely (multiplier 1.0); INT and gear bonuses still apply.
+
+## D11. Dates, streaks and day close in game-core (2026-10-20)
+
+- **Time zones use the built-in `Intl.DateTimeFormat`, not a date library.** SCOPE.md section 7 suggests `date-fns` v4 with `@date-fns/tz`, but section 3 makes `game-core` dependency-free. `Intl` with an IANA `timeZone` works in Node, Deno and Hermes, so `game-core` keeps zero dependencies. Calendar arithmetic (adding days, weekdays) runs on plain dates through UTC, which has no daylight saving. This still needs one check on a real Hermes build in P2 (Expo Go ran the placeholder fine, but no time-zone code yet); if Hermes misbehaves, the fallback is `@date-fns/tz` in the app only.
+- **Tested zones:** `America/Los_Angeles` and `Pacific/Auckland`, including both 2026 daylight-saving changes in each, and one instant that is a different date in each zone (SCOPE.md section 13.1, test 5).
+- **Scheduling:** `daily` habits run every day whatever their bitmask; `weekdays` habits and "don't" quests follow the bitmask (Monday = 1 … Sunday = 64, all days = 127).
+- **The global streak changes at day close:** +1 for a day with any completion, reset to 0 for a day with none. The longest streak never shrinks.
+- **A habit's own streak** counts back from today, skipping unscheduled days; if today is scheduled but not done yet, it counts from yesterday, since today is still open.
+- **Oak Shield** ("blocks the HP loss of 1 missed daily per day") blocks the costliest missed habit that day; a broken "don't" quest is a slip, not a missed daily, so it is never blocked.
+- **A habit counts on day D** if it was created on or before D and not archived or deleted on or before D.
+- **A user's first day close** starts from their sign-up date (`firstDate`); later runs start the day after `last_closed_date`, which covers job outages.
