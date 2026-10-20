@@ -188,3 +188,14 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **"Reset and sign out"** on the Stats tab (temporary, until Settings exists) wipes all player data and returns to sign-in, for the demo and a local hero alike.
 - **The "Your adventure begins" animation** at the end of onboarding (section 5.8) waits for the P6 animation pass; finishing goes straight to the tabs for now.
 - **Layout fix:** with `behavior="padding"`, `KeyboardAvoidingView` replaces its own bottom padding with the keyboard height, so the safe-area padding moved to an inner view (`KeyboardScreen`). Before that, the bottom buttons on sign-in sat over the home indicator.
+
+## D20. Quests screen and completing habits (2026-10-20)
+
+- **PR order changed within P2:** this PR is the Quests screen plus completing and undoing habits (the core of F3), and the habit sheet (F2) is the next PR. A Quests screen whose quests can't be ticked isn't usable, while the demo already has habits to tick. The level-up and faint modals, the floating "+20 XP" animation and the haptic come with the next F3 pieces.
+- **Screens read with `useDbQuery`:** a synchronous query on the first render, then again after every database change (expo-sqlite's change listener). Completing a habit repaints the screen right after its transaction with no loading state, and the route guard now uses the same hook (D18).
+- **Completing a habit** runs in one SQLite transaction: insert the completion with the rewards from `game-core` (streak, INT, Wizard Hat bonus, deterministic crit seeded by the new completion's UUID), then apply the XP with `applyXp` (level-ups refill HP and add 25 gold) and add the gold. A second completion of the same habit on the same day is ignored, matching the database's partial unique index. Max HP is re-derived after the insert, so a new CON point counts straight away.
+- **Undo** marks the completion `undone_at` (never deleted, SCOPE.md section 8.3) and takes back its XP and gold; XP clamps at 0 in the current level, the level never drops, and the 25 gold from a level-up is kept.
+- **The reward shown on an open quest** is the XP that completing it now would give (section 5.4); only gold changes on a crit, so the preview needs no completion id.
+- **`SyncPill` gained a `local` state ("Saved on this phone")** for the demo and play without an account, where there is nothing to sync. P4 switches the pill to the real sync status once there is an account.
+- **Not yet:** the outbox row in each mutation (P4), the "+ Add a quest" row and the empty state's button (next PR, with the habit sheet), and closing missed days on app open (with the faint modal).
+- **Demo numbers follow the formulas, not the canvas:** 12 weeks of seeded water completions give the demo hero CON 18 and 57 max HP rather than the canvas's sample 50, and its quests show the real streak and INT bonuses (SCOPE.md section 3: "these rules win").
