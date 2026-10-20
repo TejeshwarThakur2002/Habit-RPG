@@ -4,6 +4,8 @@ export type HabitType = 'daily' | 'weekdays' | 'bad';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type Category = 'body' | 'mind' | 'health' | 'none';
 export type StatName = 'STR' | 'INT' | 'CON' | 'LUCK';
+/** Cosmetic only in the MVP: sets the sprite and the title (SCOPE.md section 3). */
+export type HeroClass = 'knight' | 'mage' | 'rogue';
 
 export interface BaseValues {
   xp: number;
