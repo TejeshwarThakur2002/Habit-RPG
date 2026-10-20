@@ -74,3 +74,10 @@ The Supabase dependency docs recommend one `deno.json` per function and say noth
 ## D7. Dependency build scripts stay off (2026-10-20)
 
 pnpm 12 does not run dependency install scripts unless they are approved in `pnpm-workspace.yaml` (`allowBuilds`). Two packages asked and were denied, because both ship prebuilt native binaries and their scripts are only a fallback that compiles from source: `unrs-resolver` (used by the ESLint import resolver) and `@parcel/watcher` (used by Jest's file watcher). Any future approval gets its own entry here.
+
+## D8. CI pipeline (2026-10-20)
+
+- `.github/workflows/ci.yml` runs on every pull request and every push to `main`, with two jobs: **`ci`** (frozen-lockfile install, lint, type-check, tests) and **`gitleaks`** (secret scan of the full git history). Both are meant to be required checks on the `main` ruleset.
+- Third-party actions are pinned to commit SHAs with the release named in a comment, so a moved tag cannot change what runs. Releases at least two weeks old were chosen (checkout v7.0.0, setup-node v7.0.0, pnpm/action-setup v6.0.10, gitleaks-action v3.0.0).
+- The workflow token is read-only (`contents: read`). Gitleaks PR comments are off because they need a write token; a finding still fails the job.
+- Deferred from SCOPE.md section 13.2: coverage reporting arrives with the first real `game-core` code in P1, and the second job that starts the local Supabase stack arrives with the Supabase setup PR.
