@@ -38,7 +38,7 @@ Latest stable releases on npm at project start. Expo SDK packages are installed 
 | Lint and format | `eslint` / `eslint-config-expo` / `prettier` | 10.13.0 / 58.0.4 / 3.9.10 |
 | Commits and hooks | `@commitlint/cli` / `husky` / `lint-staged` | 21.2.4 / 9.1.7 / 17.6.0 |
 
-TypeScript uses whatever version Expo SDK 58 expects (`npx expo install typescript`), not simply the newest release, because TypeScript 7 is a major rewrite and tooling support may lag. The resolved version is recorded here when the workspace is created.
+TypeScript uses whatever version Expo SDK 58 expects, not simply the newest release, because TypeScript 7 is a major rewrite and tooling support may lag. The SDK 58 template pins `typescript ~6.0.3`, used in every workspace package.
 
 ## D3. Monorepo setup follows the current Expo guide (2026-10-19)
 
@@ -60,3 +60,12 @@ To be decided with the owner in the tooling PR.
 ## D5. Open: sharing `game-core` with Edge Functions (2026-10-19)
 
 The Supabase dependency docs recommend one `deno.json` per function and say nothing about importing local TypeScript from outside `supabase/functions`. The method (a relative import through `deno.json` imports, or a build-time copy into `supabase/functions/_shared`) is decided and tested in CI before `game-core` is first imported by a function (P3), and recorded here.
+
+## D6. Workspace scaffold choices (2026-10-20)
+
+- **pnpm 12 supply-chain policy kept on.** pnpm 12 refuses packages published within its minimum release age. Rather than adding `minimumReleaseAgeExclude` entries, Expo ranges are written as `~58.0.0` so pnpm picks the newest patch old enough to pass. Today that resolves `expo` 58.0.14 and `expo-router` 58.0.23, one or two patches behind what `expo-doctor` expects; the next `pnpm update` after the cutoff passes picks up the newer patches.
+- **Routes live in `apps/mobile/app/`** and other app code in `apps/mobile/src/` with the `@/` alias, as SCOPE.md section 10 lays out. Current Expo templates default to `src/app/`; both are supported.
+- **App config is `app.config.ts`** (typed, and able to read env vars later) instead of the template's `app.json`.
+- **Workspace packages ship TypeScript source** (`main: src/index.ts`). Metro transpiles them in the app; nothing is prebuilt.
+- **`react-dom` peer warning:** `expo-router` pulls `react-dom` 19.3.1 as an optional peer, which wants `react` ^19.3.1 while SDK 58 pins `react` 19.3.0. The app does not target web, so this is a warning only.
+- The template's `LICENSE` (Expo's MIT notice for the template), `AGENTS.md` and `.claude/settings.json` were removed: the repo's own licence is the owner's decision and `CLAUDE.md` covers agent guidance.
