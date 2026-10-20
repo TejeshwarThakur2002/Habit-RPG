@@ -45,10 +45,14 @@ const board = (overrides: Partial<QuestBoard> = {}): QuestBoard => ({
 });
 
 async function show(b: QuestBoard) {
-  const onToggle = jest.fn();
-  const onOpenParty = jest.fn();
-  await render(<QuestBoardView board={b} onToggle={onToggle} onOpenParty={onOpenParty} />);
-  return { onToggle, onOpenParty };
+  const handlers = {
+    onToggle: jest.fn(),
+    onOpenParty: jest.fn(),
+    onAdd: jest.fn(),
+    onEdit: jest.fn(),
+  };
+  await render(<QuestBoardView board={b} {...handlers} />);
+  return handlers;
 }
 
 describe('QuestBoardView', () => {
@@ -71,6 +75,14 @@ describe('QuestBoardView', () => {
     expect(onToggle).toHaveBeenCalledWith('Drink water', true);
   });
 
+  it('adds from the dashed row and edits on long press', async () => {
+    const { onAdd, onEdit } = await show(board());
+    await fireEvent.press(screen.getByRole('button', { name: 'Add a quest' }));
+    expect(onAdd).toHaveBeenCalled();
+    await fireEvent(screen.getByRole('checkbox', { name: /^Code for 1 hour/ }), 'longPress');
+    expect(onEdit).toHaveBeenCalledWith('Code for 1 hour');
+  });
+
   it('shows the real reward on an open quest', async () => {
     await show(board());
     expect(screen.getByText('+33 XP')).toBeOnTheScreen();
@@ -81,9 +93,11 @@ describe('QuestBoardView', () => {
     expect(screen.getByText('All quests done! See you tomorrow.')).toBeOnTheScreen();
   });
 
-  it('shows a friendly empty state for a new hero', async () => {
-    await show(board({ today: [], boss: null }));
+  it('shows a friendly empty state for a new hero, with a way to add a quest', async () => {
+    const { onAdd } = await show(board({ today: [], boss: null }));
     expect(screen.getByText('No quests yet')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Add a quest' }));
+    expect(onAdd).toHaveBeenCalled();
     expect(screen.getByRole('link', { name: 'Start or join a party' })).toBeOnTheScreen();
   });
 
