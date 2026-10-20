@@ -111,3 +111,12 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **Oak Shield** ("blocks the HP loss of 1 missed daily per day") blocks the costliest missed habit that day; a broken "don't" quest is a slip, not a missed daily, so it is never blocked.
 - **A habit counts on day D** if it was created on or before D and not archived or deleted on or before D.
 - **A user's first day close** starts from their sign-up date (`firstDate`); later runs start the day after `last_closed_date`, which covers job outages.
+
+## D12. Gear, bosses and golden vectors (2026-10-20)
+
+- **Gear ids** are kebab-case slugs (`iron-sword`, `oak-shield`, `wizard-hat`, `leather-boots`, `lucky-clover-charm`, `dragon-cape`); these are what `inventory.item_id` will store. Each of the six items has its own slot, so equipping one replaces only an item in that slot.
+- **The shop's disabled reasons** come from `canBuy`: `owned`, `locked` (with the unlock level) or `insufficient_gold` (with the gold still needed), matching the "Unlocks at level N" and "Need N more gold" captions in SCOPE.md section 5.2.
+- **The boss roster wraps:** after Monday, the final boss, the next week starts again with the Procrastination Slime.
+- **A defeated boss stays defeated** when a member undoes a completion. SCOPE.md section 9.4 says an undo gives the damage back, but taking back a victory after members may have claimed the +50 gold would be confusing and could double-pay; undoing still refunds damage while the boss is alive.
+- **Party codes** are generated from a caller-supplied random source (the server passes a crypto RNG), keeping `game-core` free of randomness so it stays deterministic and testable.
+- **Golden vectors** live in `packages/game-core/golden/vectors.json`. Every expected value is worked out by hand from the formulas (each case names its arithmetic), not produced by running `game-core`. Vitest checks them now; the Deno Edge Function tests load the same file in P3.
