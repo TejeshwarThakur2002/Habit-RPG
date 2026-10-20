@@ -13,7 +13,10 @@
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
@@ -25,6 +28,7 @@
     "eslint-plugin-react-native-a11y": "^3.5.1",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
-    "prettier": "^3.9.10"
+    "prettier": "^3.9.10",
+    "supabase": "2.120.0"
   }
 }

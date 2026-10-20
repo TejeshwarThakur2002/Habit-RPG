@@ -81,3 +81,11 @@ pnpm 12 does not run dependency install scripts unless they are approved in `pnp
 - Third-party actions are pinned to commit SHAs with the release named in a comment, so a moved tag cannot change what runs. Releases at least two weeks old were chosen (checkout v7.0.0, setup-node v7.0.0, pnpm/action-setup v6.0.10, gitleaks-action v3.0.0).
 - The workflow token is read-only (`contents: read`). Gitleaks PR comments are off because they need a write token; a finding still fails the job.
 - Deferred from SCOPE.md section 13.2: coverage reporting arrives with the first real `game-core` code in P1, and the second job that starts the local Supabase stack arrives with the Supabase setup PR.
+
+## D9. Local Supabase setup (2026-10-20)
+
+- **The Supabase CLI is a pinned workspace dev dependency** (`supabase` 2.120.0 on npm), run through `pnpm exec supabase` or the `pnpm supabase:*` scripts. Local machines and CI therefore use the same version, instead of whatever Homebrew has installed. The npm package has no install script, so D7's build-script policy is unaffected.
+- **Docker runtime:** OrbStack on the owner's Mac. CI uses the Docker on GitHub's Ubuntu runners.
+- **`supabase/config.toml` changes from the defaults:** `project_id = "habit-rpg"`; Storage turned off because the app stores no files; Auth `site_url` and redirect URLs set to the app scheme `habitrpg://`. Email sign-in uses 6-digit codes (the CLI default `otp_length = 6`), matching SCOPE.md section 9.5.
+- **CI:** a third job, `supabase`, starts the stack without the services the tests don't need, then runs `supabase db reset` so every migration and the seed are applied from scratch on each PR. pgTAP and Deno tests join this job in P3.
+- **Hosted project:** not created yet. When it is, it goes in region `ca-central-1` (D1), and only its URL and publishable key go in the app (`.env.example`).
