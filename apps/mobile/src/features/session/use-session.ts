@@ -13,6 +13,7 @@ export function readArea(database: AppDb): AppArea {
   return decideArea({
     signedIn: false,
     demoMode: current.demoMode,
+    localOnly: current.localOnly,
     onboardingDone: current.onboardingDone,
     hasProfile: getProfile(database, LOCAL_USER_ID) !== undefined,
   });

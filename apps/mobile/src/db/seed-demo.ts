@@ -13,6 +13,7 @@ import {
   type HabitType,
 } from '@habit-rpg/game-core';
 
+import { deletePlayerData } from './queries/local-data';
 import * as t from './schema';
 import { LOCAL_USER_ID, type AppDb } from './types';
 
@@ -40,20 +41,6 @@ function doneOn(habitIndex: number, daysAgo: number): boolean {
   return (daysAgo * 7 + habitIndex * 3) % 5 > 1 || (daysAgo < 30 && habitIndex === 1);
 }
 
-const DEMO_TABLES = [
-  t.completions,
-  t.habits,
-  t.inventory,
-  t.dayClosures,
-  t.characters,
-  t.profiles,
-  t.partyEvents,
-  t.bossWeeks,
-  t.partyMembers,
-  t.parties,
-  t.outbox,
-] as const;
-
 /** Replaces all local data with the demo hero. Runs in one transaction. */
 export function seedDemo(db: AppDb, { now, timeZone, newId }: SeedOptions): void {
   const today = localDate(now, timeZone);
@@ -61,7 +48,7 @@ export function seedDemo(db: AppDb, { now, timeZone, newId }: SeedOptions): void
   const userId = LOCAL_USER_ID;
 
   db.transaction((tx) => {
-    for (const table of DEMO_TABLES) tx.delete(table).run();
+    deletePlayerData(tx);
 
     tx.insert(t.profiles)
       .values({
@@ -123,7 +110,7 @@ export function seedDemo(db: AppDb, { now, timeZone, newId }: SeedOptions): void
       .run();
 
     seedDemoParty(tx, { now, timeZone, newId, stamp, userId });
-    const demoFlags = { demoMode: true, onboardingDone: true };
+    const demoFlags = { demoMode: true, localOnly: false, onboardingDone: true };
     tx.insert(t.settings)
       .values({ id: 1, ...demoFlags })
       .onConflictDoUpdate({ target: t.settings.id, set: demoFlags })

@@ -3,6 +3,7 @@ import { decideArea, type SessionState } from '../route';
 const base: SessionState = {
   signedIn: false,
   demoMode: false,
+  localOnly: false,
   onboardingDone: false,
   hasProfile: false,
 };
@@ -14,6 +15,13 @@ describe('decideArea', () => {
 
   it('lets a finished demo into the tabs', () => {
     expect(decideArea({ ...base, demoMode: true, onboardingDone: true, hasProfile: true })).toBe(
+      'tabs',
+    );
+  });
+
+  it('sends a player without an account to onboarding, then the tabs', () => {
+    expect(decideArea({ ...base, localOnly: true })).toBe('onboarding');
+    expect(decideArea({ ...base, localOnly: true, hasProfile: true, onboardingDone: true })).toBe(
       'tabs',
     );
   });

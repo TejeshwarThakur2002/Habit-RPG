@@ -6,13 +6,18 @@ export interface SessionState {
   /** A Supabase session exists (P3); always false until sign-in is built. */
   signedIn: boolean;
   demoMode: boolean;
+  /** Chose "Start without an account" on sign-in (DECISIONS.md D19). */
+  localOnly: boolean;
   onboardingDone: boolean;
   hasProfile: boolean;
 }
 
-/** No session and no demo: sign in. Signed in without a hero: onboarding. Otherwise the tabs. */
+/**
+ * No session, no demo and no local play: sign in. In, but without a hero: onboarding.
+ * Otherwise the tabs.
+ */
 export function decideArea(state: SessionState): AppArea {
-  if (!state.signedIn && !state.demoMode) return 'sign-in';
+  if (!state.signedIn && !state.demoMode && !state.localOnly) return 'sign-in';
   if (!state.hasProfile || !state.onboardingDone) return 'onboarding';
   return 'tabs';
 }
