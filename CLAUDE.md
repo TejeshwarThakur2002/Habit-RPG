@@ -10,14 +10,15 @@ and licences: [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Current phase
 
-**P1 Game rules, UI kit and sprites** (SCOPE.md section 11). P0 is done: the app boots on the iOS
-simulator and the Android emulator, CI is green on `main`, and `supabase start` works. Still
-deferred from P0: creating the hosted Supabase project (ask the owner first).
+**P1 Game rules, UI kit and sprites is complete** once its last PR merges; **P2 Local-only app**
+is next and needs the owner's go-ahead (restate its task list first). Still deferred from P0:
+creating the hosted Supabase project (ask the owner first).
 
-P1 order: `game-core` (rewards, levels and HP; then dates, streaks and day close; then gear, boss
-damage and golden test vectors), then `packages/ui` with the dev gallery, then `packages/sprites`.
-Done when the gallery shows every component and state and `game-core` has 90%+ coverage (enforced
-by `vitest --coverage` thresholds).
+P1 delivered `game-core` (every rule in SCOPE.md section 3, golden vectors, 100% coverage),
+`packages/ui` (tokens, fonts and every section 5.2 component in every state) and
+`packages/sprites` (3 classes, 6 gear overlays, 8 bosses). See them all on the dev-only
+`/dev/gallery` screen. Carried into P2: shop item icons (placeholders in the gallery) and a
+check that `Intl` time zones work on Hermes (DECISIONS.md D11).
 
 On this Mac the Android emulator renders black with its default GPU mode; start it with
 `emulator -avd Medium_Phone_API_37.0 -gpu swiftshader_indirect`.
@@ -61,7 +62,7 @@ packages/
   game-core/            pure game rules, no dependencies, used by app and server
   shared/               Zod schemas and types for sync and party payloads
   ui/                   design tokens (tokens.ts) and shared components
-  sprites/              pixel-art matrices and SVG renderers
+  sprites/              pixel-art matrices (art.ts), palette and HeroSprite/BossSprite
 supabase/               config.toml, seed.sql; migrations/, functions/, tests/ arrive in P3
 docs/                   SCOPE, DECISIONS, ASSETS (PRIVACY, ARCHITECTURE, DEMO later)
 .github/workflows/      ci.yml
