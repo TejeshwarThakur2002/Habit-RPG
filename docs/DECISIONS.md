@@ -238,3 +238,13 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **Reduce Motion:** the saved `settings.reduce_motion` now reaches `ReduceMotionProvider` at the root (until now only the dev gallery used the provider). With it on, there is no float, pop, hop or confetti and state changes are instant; haptics stay on. The Settings switch for it arrives with the Settings screen.
 - **Reusable pieces in packages/ui:** `FloatingReward`, `Confetti` (seeded, so the same pattern every time), `Hop`, and the checkbox pop inside `HabitRow`.
 - **Checked on the iPhone simulator with screen recordings:** the float, the level-up hop and confetti (gone after 1.2 s), and Reduce Motion. Haptics can't be felt on a simulator; tests check that the right one is requested.
+
+## D25. Hero screen and gear shop (2026-10-22)
+
+- **Builds F5 as SCOPE.md section 5.6 lays it out:** "Your Hero" with the gold chip; the hero card with the sprite at 110 × 132 (11 pt cells) wearing its equipped gear, the name, "Level 9 Knight" and the four stat chips; the helper line; and the gear shop with Shop and Owned tabs.
+- **Shop and Owned:** Shop lists items not yet bought, each with game-core's `canBuy` state (buyable, "Need N more gold" or "Unlocks at level N"). Owned lists bought items with Equip or Equipped. Buying moves an item from Shop to Owned, matching F5's "the item moves to my inventory".
+- **Buying** takes the gold and adds the item unequipped in one transaction, and shows "Bought Oak Shield" with Undo for 5 seconds. Undo gives the gold back and removes the item, taking it off first if it was already put on. A refused purchase (only possible after a very fast double tap) says why in the toast.
+- **Equipping** uses game-core's `equip` (one item per slot) and `unequip`. Stats and the sprite change at once. If taking something off lowers max HP below the current HP, HP drops to the new maximum, since HP never exceeds max (section 3).
+- **Stat tooltips:** tapping a stat chip shows how that stat grows and what it does, from the rules in section 3, in a panel under the chips (a screen reader reads it when it appears). Tapping the chip again hides it.
+- **Item icons:** six original 8 × 8 pixel-art icons in the sprite palette (`packages/sprites/src/items.ts`) and an `ItemIcon` renderer, 24 pt by default, greyed while locked. They replace the gallery's placeholder blocks, which were the last item carried into P2 from P1. Like every sprite they are original, so docs/ASSETS.md needs no new entry.
+- **Not yet:** the outbox row for purchases and equips comes with sync in P4, where the server checks the price again.
