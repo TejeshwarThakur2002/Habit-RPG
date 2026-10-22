@@ -1,5 +1,6 @@
+import { cleanText } from '@/lib/text';
+
 import {
-  cleanHeroName,
   fieldError,
   heroInputSchema,
   heroNameSchema,
@@ -9,8 +10,8 @@ import {
 
 describe('hero name', () => {
   it('strips control and invisible characters and tidies spaces', () => {
-    expect(cleanHeroName('  Sir\u0007  Commit\u200B ')).toBe('Sir Commit');
-    expect(cleanHeroName('Ada\nLovelace')).toBe('Ada Lovelace');
+    expect(cleanText('  Sir\u0007  Commit\u200B ')).toBe('Sir Commit');
+    expect(cleanText('Ada\nLovelace')).toBe('Ada Lovelace');
   });
 
   it('accepts 2 to 20 characters after cleaning', () => {

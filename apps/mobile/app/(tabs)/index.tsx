@@ -28,6 +28,12 @@ export default function Quests() {
   };
 
   return (
-    <QuestBoardView board={board} onToggle={toggle} onOpenParty={() => router.navigate('/party')} />
+    <QuestBoardView
+      board={board}
+      onToggle={toggle}
+      onOpenParty={() => router.navigate('/party')}
+      onAdd={() => router.push('/modal/habit/new')}
+      onEdit={(habitId) => router.push({ pathname: '/modal/habit/[id]', params: { id: habitId } })}
+    />
   );
 }

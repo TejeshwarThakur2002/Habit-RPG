@@ -1,5 +1,17 @@
-import { HabitRow, ScreenHeader, SyncPill, colors, radii, spacing, type } from '@habit-rpg/ui';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Button,
+  HabitRow,
+  MIN_TOUCH,
+  ScreenHeader,
+  SyncPill,
+  borders,
+  colors,
+  fonts,
+  radii,
+  spacing,
+  type,
+} from '@habit-rpg/ui';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { QuestBoard } from '@/db/queries/quest-board';
@@ -13,10 +25,15 @@ export interface QuestBoardViewProps {
   board: QuestBoard;
   onToggle: (habitId: string, done: boolean) => void;
   onOpenParty: () => void;
+  /** Opens the habit sheet for a new quest. */
+  onAdd: () => void;
+  /** Opens the habit sheet for an existing quest (long press or the "Edit" action). */
+  onEdit: (habitId: string) => void;
 }
 
 /** The Quests tab (SCOPE.md section 5.4). */
-export function QuestBoardView({ board, onToggle, onOpenParty }: QuestBoardViewProps) {
+export function QuestBoardView(props: QuestBoardViewProps) {
+  const { board, onToggle, onOpenParty, onAdd, onEdit } = props;
   const insets = useSafeAreaInsets();
   const doneCount = board.today.filter((q) => q.doneToday).length;
   const allDone = board.today.length > 0 && doneCount === board.today.length;
@@ -34,6 +51,7 @@ export function QuestBoardView({ board, onToggle, onOpenParty }: QuestBoardViewP
         <View style={styles.empty}>
           <Text style={type.sectionTitle}>No quests yet</Text>
           <Text style={type.secondary}>Add your first one and start earning XP.</Text>
+          <Button label="Add a quest" onPress={onAdd} />
         </View>
       ) : (
         <>
@@ -64,8 +82,10 @@ export function QuestBoardView({ board, onToggle, onOpenParty }: QuestBoardViewP
                 done={doneToday}
                 bad={habit.type === 'bad'}
                 onToggle={() => onToggle(habit.id, doneToday)}
+                onEdit={() => onEdit(habit.id)}
               />
             ))}
+            <AddQuestRow onPress={onAdd} />
           </View>
           <LaterThisWeek habits={board.laterThisWeek} />
         </>
@@ -76,7 +96,31 @@ export function QuestBoardView({ board, onToggle, onOpenParty }: QuestBoardViewP
   );
 }
 
+/** The dashed "+ Add a quest" row under the list (SCOPE.md section 5.4, item 5). */
+function AddQuestRow({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Add a quest"
+      onPress={onPress}
+      style={styles.addRow}
+    >
+      <Text style={styles.addText}>+ Add a quest</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  addRow: {
+    minHeight: Math.max(MIN_TOUCH, 58),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.row,
+    borderWidth: borders.card,
+    borderStyle: 'dashed',
+    borderColor: colors.borderStrong,
+  },
+  addText: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.gold },
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { gap: spacing.section, paddingHorizontal: spacing.screenX, paddingBottom: 32 },
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
@@ -90,5 +134,5 @@ const styles = StyleSheet.create({
     borderColor: colors.teal,
   },
   bannerText: { color: colors.teal },
-  empty: { gap: 6, paddingVertical: 8 },
+  empty: { gap: 10, paddingVertical: 8 },
 });

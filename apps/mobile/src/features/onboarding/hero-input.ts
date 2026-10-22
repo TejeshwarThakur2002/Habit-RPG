@@ -1,13 +1,8 @@
 import { z } from 'zod';
 
-// SCOPE.md F1: hero name 2 to 20 characters. Section 9.6: hero names are shown to party
-// members, so control characters are stripped and whitespace is tidied first.
-const CONTROL_CHARS = /[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u2028-\u202E\u2066-\u2069]/g;
+import { cleanText } from '@/lib/text';
 
-export function cleanHeroName(raw: string): string {
-  // Whitespace first, so a newline between words becomes a space rather than vanishing.
-  return raw.replace(/\s+/g, ' ').replace(CONTROL_CHARS, '').trim();
-}
+// SCOPE.md F1: hero name 2 to 20 characters, after cleanText (section 9.6).
 
 export function isValidTimeZone(zone: string): boolean {
   try {
@@ -20,7 +15,7 @@ export function isValidTimeZone(zone: string): boolean {
 
 export const heroNameSchema = z
   .string()
-  .transform(cleanHeroName)
+  .transform(cleanText)
   .pipe(z.string().min(2, 'Use at least 2 characters').max(20, 'Use at most 20 characters'));
 
 export const timeZoneSchema = z

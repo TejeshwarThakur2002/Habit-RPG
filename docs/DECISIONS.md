@@ -199,3 +199,13 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **`SyncPill` gained a `local` state ("Saved on this phone")** for the demo and play without an account, where there is nothing to sync. P4 switches the pill to the real sync status once there is an account.
 - **Not yet:** the outbox row in each mutation (P4), the "+ Add a quest" row and the empty state's button (next PR, with the habit sheet), and closing missed days on app open (with the faint modal).
 - **Demo numbers follow the formulas, not the canvas:** 12 weeks of seeded water completions give the demo hero CON 18 and 57 max HP rather than the canvas's sample 50, and its quests show the real streak and INT bonuses (SCOPE.md section 3: "these rules win").
+
+## D21. Habit sheet (2026-10-20)
+
+- **Versions:** `react-hook-form` 7.90.0 and `@hookform/resolvers` 5.9.2, with the Zod 4 schema from the app (SCOPE.md section 7). The form keeps raw input; the schema cleans the name like hero names (section 9.6), requires 1 to 60 characters, requires a day for a Weekdays quest, and sets every day for Daily and Don't quests.
+- **One route, `modal/habit/[id]`:** `new` adds a quest, any other id edits it; an unknown or deleted id just closes. It opens with Expo Router's `presentation: 'modal'`, which on iOS is the native page sheet (slides up, swipe down to close). SCOPE.md section 5.3 says "bottom sheet"; the native sheet gives the swipe-to-dismiss and keyboard handling for a long form for free, so the in-app `BottomSheet` stays for short sheets. Say if the custom sheet is wanted instead.
+- **Entry points (section 5.4):** the dashed "+ Add a quest" row under the list, a button in the empty state, and long press or the accessibility action "Edit" on a row.
+- **Archive and delete are soft** (section 8.3): archive sets `archived_at`, delete sets `deleted_at` after a confirm alert. Both hide the quest from the board and keep its completions for stats. Every write bumps `client_updated_at` for P4's sync.
+- **The live numbers** under the difficulty ("+20 XP · +6 gold · −6 HP if missed") come from `game-core`'s base values, before streak and stat bonuses.
+- **Not in this PR:** the optional daily reminder time (it needs notification permissions and scheduling, so it lands with F9 reminders), and drag to reorder (its own F2 PR). New quests go to the end of the list.
+- **`cleanText`** moved from onboarding to `src/lib/text.ts`, shared by hero and quest names.
