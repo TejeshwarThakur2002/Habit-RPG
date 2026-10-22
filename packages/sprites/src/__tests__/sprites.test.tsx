@@ -11,8 +11,9 @@ import {
   HERO_ROWS,
   type Matrix,
 } from '../art';
+import { ITEM_COLS, ITEM_ICONS, ITEM_ROWS } from '../items';
 import { PALETTE, TRANSPARENT, desaturate, isPaletteKey } from '../palette';
-import { BossSprite, HeroSprite, heroLayers, toRuns } from '../render';
+import { BossSprite, HeroSprite, ItemIcon, heroLayers, toRuns } from '../render';
 
 // SCOPE.md section 5.2: every matrix has the right dimensions and only valid palette indices.
 function expectValidMatrix(matrix: Matrix, cols: number, rows: number) {
@@ -32,6 +33,14 @@ describe('sprite data', () => {
 
   it.each(Object.entries(GEAR_ART))('gear %s is 10 x 12 with valid colours', (_, art) => {
     expectValidMatrix(art.matrix, HERO_COLS, HERO_ROWS);
+  });
+
+  it.each(Object.entries(ITEM_ICONS))('item icon %s is 8 x 8 with valid colours', (_, matrix) => {
+    expectValidMatrix(matrix, ITEM_COLS, ITEM_ROWS);
+  });
+
+  it('has an icon for every shop item', () => {
+    expect(Object.keys(ITEM_ICONS).sort()).toEqual(GEAR.map((g) => g.id).sort());
   });
 
   it.each(Object.entries(BOSSES))('boss %s is 12 x 8 with valid colours', (_, matrix) => {
@@ -88,5 +97,12 @@ describe('components', () => {
     );
     expect(screen.getByRole('image', { name: 'Procrastination Slime' })).toBeOnTheScreen();
     expect(screen.getByRole('image', { name: 'Monday, defeated' })).toBeOnTheScreen();
+  });
+});
+
+describe('ItemIcon', () => {
+  it('draws the item at 24 pt, named for screen readers', async () => {
+    await render(<ItemIcon id="oak-shield" />);
+    expect(screen.getByRole('image', { name: 'Oak Shield' })).toBeOnTheScreen();
   });
 });

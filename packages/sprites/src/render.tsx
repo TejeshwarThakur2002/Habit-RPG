@@ -1,4 +1,11 @@
-import { BOSS_NAMES, GEAR, type BossKey, type GearId, type HeroClass } from '@habit-rpg/game-core';
+import {
+  BOSS_NAMES,
+  GEAR,
+  gearItem,
+  type BossKey,
+  type GearId,
+  type HeroClass,
+} from '@habit-rpg/game-core';
 import { memo } from 'react';
 import { View } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
@@ -13,6 +20,7 @@ import {
   HERO_ROWS,
   type Matrix,
 } from './art';
+import { ITEM_COLS, ITEM_ICONS, ITEM_ROWS } from './items';
 import { PALETTE, TRANSPARENT, desaturate, type PaletteKey } from './palette';
 
 export interface Run {
@@ -119,6 +127,28 @@ export const BossSprite = memo(function BossSprite({ boss, defeated, cell = 12 }
       cell={cell}
       grey={defeated}
       label={defeated ? `${name}, defeated` : name}
+    />
+  );
+});
+
+export interface ItemIconProps {
+  id: GearId;
+  /** 3 gives a 24 pt icon, the size ShopItem expects. */
+  cell?: number;
+  /** Greyed out, e.g. for an item that is still locked. */
+  grey?: boolean;
+}
+
+/** A shop item on its own (SCOPE.md section 5.6), labelled with the item's name. */
+export const ItemIcon = memo(function ItemIcon({ id, cell = 3, grey }: ItemIconProps) {
+  return (
+    <PixelArt
+      layers={[ITEM_ICONS[id]]}
+      cols={ITEM_COLS}
+      rows={ITEM_ROWS}
+      cell={cell}
+      label={gearItem(id).name}
+      grey={grey}
     />
   );
 });
