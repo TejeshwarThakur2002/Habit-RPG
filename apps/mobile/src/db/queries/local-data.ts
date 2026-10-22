@@ -25,7 +25,8 @@ export function deletePlayerData(tx: Writer): void {
   for (const table of PLAYER_TABLES) tx.delete(table).run();
 }
 
-const SIGNED_OUT = { demoMode: false, localOnly: false, onboardingDone: false };
+// A pending faint belongs to the player, so it goes whenever player data does.
+const SIGNED_OUT = { demoMode: false, localOnly: false, onboardingDone: false, pendingFaint: null };
 
 /** Leaves the demo (or the local game): wipes player data and returns to sign-in. */
 export function resetLocalData(db: AppDb): void {
@@ -66,7 +67,7 @@ export function createHero(db: AppDb, input: NewHeroInput): void {
     tx.insert(t.characters)
       .values({ userId, ...newHero() })
       .run();
-    const flags = { onboardingDone: true, demoMode: false };
+    const flags = { onboardingDone: true, demoMode: false, pendingFaint: null };
     tx.insert(t.settings)
       .values({ id: 1, ...flags })
       .onConflictDoUpdate({ target: t.settings.id, set: flags })

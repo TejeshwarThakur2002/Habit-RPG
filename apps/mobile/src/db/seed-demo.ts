@@ -110,7 +110,12 @@ export function seedDemo(db: AppDb, { now, timeZone, newId }: SeedOptions): void
       .run();
 
     seedDemoParty(tx, { now, timeZone, newId, stamp, userId });
-    const demoFlags = { demoMode: true, localOnly: false, onboardingDone: true };
+    const demoFlags = {
+      demoMode: true,
+      localOnly: false,
+      onboardingDone: true,
+      pendingFaint: null,
+    };
     tx.insert(t.settings)
       .values({ id: 1, ...demoFlags })
       .onConflictDoUpdate({ target: t.settings.id, set: demoFlags })

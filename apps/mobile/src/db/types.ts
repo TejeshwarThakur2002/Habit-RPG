@@ -10,3 +10,13 @@ export type AppDb = BaseSQLiteDatabase<'sync', unknown, typeof schema>;
 
 /** The local user's id before sign-in, and in demo mode. */
 export const LOCAL_USER_ID = 'local';
+
+/** What a faint at day close took, kept until the player has seen the "You fainted" modal. */
+export interface FaintNotice {
+  /** The local day whose misses brought HP to 0. */
+  date: string;
+  goldLost: number;
+  xpLost: number;
+  /** Names of the quests missed that day, for the modal. */
+  missed: string[];
+}
