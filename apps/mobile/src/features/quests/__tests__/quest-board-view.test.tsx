@@ -4,7 +4,7 @@ import type { Habit } from '@/db/queries/hero';
 import type { QuestBoard } from '@/db/queries/quest-board';
 
 import { habitMeta, weekdayList } from '../habit-meta';
-import { QuestBoardView } from '../quest-board-view';
+import { QuestBoardView, type QuestBoardViewProps } from '../quest-board-view';
 import { moveItem } from '../today-list';
 
 const habit = (id: string, overrides: Partial<Habit> = {}): Habit => ({
@@ -45,7 +45,7 @@ const board = (overrides: Partial<QuestBoard> = {}): QuestBoard => ({
   ...overrides,
 });
 
-async function show(b: QuestBoard) {
+async function show(b: QuestBoard, extra: Partial<QuestBoardViewProps> = {}) {
   const handlers = {
     onToggle: jest.fn(),
     onOpenParty: jest.fn(),
@@ -53,7 +53,7 @@ async function show(b: QuestBoard) {
     onEdit: jest.fn(),
     onReorder: jest.fn(),
   };
-  await render(<QuestBoardView board={b} {...handlers} />);
+  await render(<QuestBoardView board={b} {...handlers} {...extra} />);
   return handlers;
 }
 
@@ -98,6 +98,13 @@ describe('QuestBoardView', () => {
     expect(onReorder).toHaveBeenLastCalledWith(['Code for 1 hour', 'Drink water']);
     await fireEvent(last, 'accessibilityAction', { nativeEvent: { actionName: 'moveUp' } });
     expect(onReorder).toHaveBeenLastCalledWith(['Code for 1 hour', 'Drink water']);
+  });
+
+  it('floats the latest reward up from its row', async () => {
+    const reward = { habitId: 'Drink water', completionId: 'c1', xp: 15, gold: 4 };
+    await show(board(), { lastReward: reward });
+    expect(screen.getByText('+15 XP', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByText('+4 gold', { includeHiddenElements: true })).toBeTruthy();
   });
 
   it('shows the real reward on an open quest', async () => {
