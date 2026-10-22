@@ -15,6 +15,13 @@
       "when": 1792512603182,
       "tag": "0001_add_local_only_setting",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792689223978,
+      "tag": "0002_add_pending_faint_setting",
+      "breakpoints": true
     }
   ]
 }
