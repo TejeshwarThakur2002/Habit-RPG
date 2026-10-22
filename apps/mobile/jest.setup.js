@@ -18,3 +18,12 @@ jest.mock('react-native-reorderable-list', () => {
     useReorderableDrag: () => () => {},
   };
 });
+
+// expo-haptics talks to the Taptic Engine; tests only check that the right feedback is asked for.
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(() => Promise.resolve()),
+  notificationAsync: jest.fn(() => Promise.resolve()),
+  selectionAsync: jest.fn(() => Promise.resolve()),
+  ImpactFeedbackStyle: { Light: 'light' },
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning' },
+}));

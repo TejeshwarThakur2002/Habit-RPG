@@ -1,8 +1,16 @@
-import { memo, type ReactNode } from 'react';
+import { memo, useEffect, useRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import Svg, { Rect } from 'react-native-svg';
 
-import { MIN_TOUCH, borders, colors, radii, type } from '../tokens';
+import { useReduceMotion } from '../motion';
+
+import { MIN_TOUCH, borders, colors, motion, radii, type } from '../tokens';
 
 export interface HabitRowProps {
   name: string;
@@ -67,15 +75,7 @@ export const HabitRow = memo(function HabitRow(props: HabitRowProps) {
         onLongPress={onEdit}
         style={[styles.press, dragHandle !== undefined && styles.pressWithHandle]}
       >
-        <View style={[styles.box, done && styles.boxDone]}>
-          {done && (
-            <Svg width={14} height={14} viewBox="0 0 14 14">
-              {CHECK_PIXELS.map(([x, y]) => (
-                <Rect key={`${x}-${y}`} x={x * 2} y={y * 2} width={2} height={2} fill={colors.bg} />
-              ))}
-            </Svg>
-          )}
-        </View>
+        <CheckBox done={done} />
         <View style={styles.text}>
           <Text style={[type.bodyStrong, done && styles.nameDone]}>{name}</Text>
           <Text style={type.meta}>{meta}</Text>
@@ -88,6 +88,33 @@ export const HabitRow = memo(function HabitRow(props: HabitRowProps) {
     </View>
   );
 });
+
+/** Pops from 1 to 1.15 and back over 150 ms when it becomes checked (SCOPE.md section 5.9). */
+function CheckBox({ done }: { done: boolean }) {
+  const reduceMotion = useReduceMotion();
+  const scale = useSharedValue(1);
+  const wasDone = useRef(done);
+  useEffect(() => {
+    if (done && !wasDone.current && !reduceMotion) {
+      const half = { duration: motion.checkboxPop / 2 };
+      scale.value = withSequence(withTiming(1.15, half), withTiming(1, half));
+    }
+    wasDone.current = done;
+  }, [done, reduceMotion, scale]);
+  const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  return (
+    <Animated.View style={[styles.box, done && styles.boxDone, popStyle]}>
+      {done && (
+        <Svg width={14} height={14} viewBox="0 0 14 14">
+          {CHECK_PIXELS.map(([x, y]) => (
+            <Rect key={`${x}-${y}`} x={x * 2} y={y * 2} width={2} height={2} fill={colors.bg} />
+          ))}
+        </Svg>
+      )}
+    </Animated.View>
+  );
+}
 
 function rowActions(props: HabitRowProps) {
   const all = [

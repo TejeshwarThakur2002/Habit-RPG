@@ -1,5 +1,6 @@
 import { colors, fonts } from '@habit-rpg/ui';
 import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TabIcon, type TabName } from '@/components/tab-icon';
@@ -8,6 +9,7 @@ import { dismissFaint, getPendingFaint } from '@/db/queries/day-close';
 import { useDbQuery } from '@/db/use-db-query';
 import { FaintedModal } from '@/features/day-close/fainted-modal';
 import { useDayClose } from '@/features/day-close/use-day-close';
+import { haptics } from '@/lib/haptics';
 
 const TABS: { route: string; title: string; icon: TabName }[] = [
   { route: 'index', title: 'Quests', icon: 'quests' },
@@ -24,9 +26,14 @@ export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   useDayClose();
   const faint = useDbQuery(() => getPendingFaint(db));
+  const faintDate = faint?.date;
+  useEffect(() => {
+    if (faintDate) haptics.faint();
+  }, [faintDate]);
   return (
     <>
       <Tabs
+        screenListeners={{ tabPress: haptics.tabChange }}
         screenOptions={{
           headerShown: false,
           sceneStyle: { backgroundColor: colors.bg },

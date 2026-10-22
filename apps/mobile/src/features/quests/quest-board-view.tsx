@@ -19,7 +19,7 @@ import type { QuestBoard } from '@/db/queries/quest-board';
 import { BossMiniCard } from './boss-mini-card';
 import { HeroCard } from './hero-card';
 import { LaterThisWeek } from './later-this-week';
-import { TodayList } from './today-list';
+import { TodayList, type LastReward } from './today-list';
 
 export interface QuestBoardViewProps {
   board: QuestBoard;
@@ -31,11 +31,13 @@ export interface QuestBoardViewProps {
   onEdit: (habitId: string) => void;
   /** Saves today's quests in a new order (drag handle or "Move up" / "Move down"). */
   onReorder: (habitIds: string[]) => void;
+  /** The latest completion's rewards, floated up from its row. */
+  lastReward?: LastReward | null;
 }
 
 /** The Quests tab (SCOPE.md section 5.4). */
 export function QuestBoardView(props: QuestBoardViewProps) {
-  const { board, onToggle, onOpenParty, onAdd, onEdit, onReorder } = props;
+  const { board, onToggle, onOpenParty, onAdd, onEdit, onReorder, lastReward } = props;
   const insets = useSafeAreaInsets();
   const doneCount = board.today.filter((q) => q.doneToday).length;
   const allDone = board.today.length > 0 && doneCount === board.today.length;
@@ -80,6 +82,7 @@ export function QuestBoardView(props: QuestBoardViewProps) {
               onToggle={onToggle}
               onEdit={onEdit}
               onReorder={onReorder}
+              lastReward={lastReward ?? null}
             />
             <AddQuestRow onPress={onAdd} />
           </View>

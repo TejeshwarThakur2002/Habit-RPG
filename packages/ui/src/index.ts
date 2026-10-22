@@ -6,6 +6,7 @@ export * from './components/small';
 export * from './components/stat-bar';
 export * from './components/sync-pill';
 export * from './components/habit-row';
+export * from './components/celebration';
 export * from './components/heatmap';
 export * from './components/party';
 export * from './components/shop-item';

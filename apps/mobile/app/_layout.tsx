@@ -4,7 +4,7 @@ import {
   PixelifySans_700Bold,
   useFonts,
 } from '@expo-google-fonts/pixelify-sans';
-import { colors } from '@habit-rpg/ui';
+import { ReduceMotionProvider, colors } from '@habit-rpg/ui';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -12,7 +12,10 @@ import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { db } from '@/db/client';
 import { DatabaseGate } from '@/db/database-gate';
+import { getSettings } from '@/db/queries/settings';
+import { useDbQuery } from '@/db/use-db-query';
 import { useAppArea } from '@/features/session/use-session';
 
 // Keep the splash screen up until fonts load, so text never flashes in a fallback font.
@@ -49,22 +52,26 @@ export default function RootLayout() {
 /** Only the routes for the current area are reachable (SCOPE.md section 5.3, route guards). */
 function GuardedStack() {
   const area = useAppArea();
+  // The in-app Reduce Motion choice ("system" until Settings exists) reaches every animation.
+  const reduceMotion = useDbQuery(() => getSettings(db).reduceMotion);
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
-      <Stack.Protected guard={area === 'sign-in'}>
-        <Stack.Screen name="(auth)/sign-in" />
-      </Stack.Protected>
-      <Stack.Protected guard={area === 'onboarding'}>
-        <Stack.Screen name="(auth)/onboarding" />
-      </Stack.Protected>
-      <Stack.Protected guard={area === 'tabs'}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="modal/habit/[id]" options={{ presentation: 'modal' }} />
-      </Stack.Protected>
-      <Stack.Protected guard={__DEV__}>
-        <Stack.Screen name="dev/gallery" />
-      </Stack.Protected>
-    </Stack>
+    <ReduceMotionProvider value={reduceMotion}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+        <Stack.Protected guard={area === 'sign-in'}>
+          <Stack.Screen name="(auth)/sign-in" />
+        </Stack.Protected>
+        <Stack.Protected guard={area === 'onboarding'}>
+          <Stack.Screen name="(auth)/onboarding" />
+        </Stack.Protected>
+        <Stack.Protected guard={area === 'tabs'}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="modal/habit/[id]" options={{ presentation: 'modal' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={__DEV__}>
+          <Stack.Screen name="dev/gallery" />
+        </Stack.Protected>
+      </Stack>
+    </ReduceMotionProvider>
   );
 }
 

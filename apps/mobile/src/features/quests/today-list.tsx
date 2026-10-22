@@ -1,4 +1,4 @@
-import { DragHandle, HabitRow, spacing } from '@habit-rpg/ui';
+import { DragHandle, FloatingReward, HabitRow, spacing } from '@habit-rpg/ui';
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
@@ -13,19 +13,29 @@ import { habitMeta } from './habit-meta';
 
 type TodayQuest = QuestBoard['today'][number];
 
+export interface LastReward {
+  habitId: string;
+  /** A new completion restarts the float, even for the same habit. */
+  completionId: string;
+  xp: number;
+  gold: number;
+}
+
 export interface TodayListProps {
   quests: TodayQuest[];
   onToggle: (habitId: string, done: boolean) => void;
   onEdit: (habitId: string) => void;
   /** Today's habit ids in their new order. */
   onReorder: (habitIds: string[]) => void;
+  lastReward: LastReward | null;
 }
 
 /**
  * Today's quests, reordered by dragging a row's handle or with the screen reader's
  * "Move up" / "Move down" (SCOPE.md F2). Lives inside the board's ScrollViewContainer.
  */
-export function TodayList({ quests, onToggle, onEdit, onReorder }: TodayListProps) {
+export function TodayList(props: TodayListProps) {
+  const { quests, onToggle, onEdit, onReorder, lastReward } = props;
   const ids = quests.map((q) => q.habit.id);
   const move = (from: number, to: number) => onReorder(moveItem(ids, from, to));
 
@@ -42,6 +52,7 @@ export function TodayList({ quests, onToggle, onEdit, onReorder }: TodayListProp
           quest={item}
           onToggle={onToggle}
           onEdit={onEdit}
+          reward={lastReward?.habitId === item.habit.id ? lastReward : null}
           onMoveUp={index > 0 ? () => move(index, index - 1) : undefined}
           onMoveDown={index < quests.length - 1 ? () => move(index, index + 1) : undefined}
         />
@@ -62,6 +73,7 @@ interface QuestItemProps {
   quest: TodayQuest;
   onToggle: (habitId: string, done: boolean) => void;
   onEdit: (habitId: string) => void;
+  reward: LastReward | null;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 }
@@ -84,6 +96,15 @@ const QuestItem = memo(function QuestItem(props: QuestItemProps) {
         onMoveDown={props.onMoveDown}
         dragHandle={<DragHandle onPressIn={drag} />}
       />
+      {props.reward && (
+        <View pointerEvents="none" style={styles.reward}>
+          <FloatingReward
+            key={props.reward.completionId}
+            xp={props.reward.xp}
+            gold={props.reward.gold}
+          />
+        </View>
+      )}
     </View>
   );
 });
@@ -91,4 +112,7 @@ const QuestItem = memo(function QuestItem(props: QuestItemProps) {
 const styles = StyleSheet.create({
   // Spacing inside each cell rather than a separator, so the dragged row carries its gap.
   cell: { paddingBottom: spacing.row },
+  // Starts at the row's top edge above its reward, and rises into the gap above the row
+  // rather than over the row's own "Done".
+  reward: { position: 'absolute', right: 64, top: -10 },
 });
