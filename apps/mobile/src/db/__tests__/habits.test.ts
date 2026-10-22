@@ -5,6 +5,7 @@ import {
   createHabit,
   deleteHabit,
   getHabit,
+  reorderHabits,
   updateHabit,
   type HabitFields,
 } from '../queries/habits';
@@ -80,5 +81,44 @@ describe('editing', () => {
     updateHabit(db, 'someone-else', 'h', NOW, fields({ name: 'Hacked' }));
     expect(getHabit(db, user, 'h')?.name).toBe('Read 20 pages');
     expect(getHabit(db, 'someone-else', 'h')).toBeUndefined();
+  });
+});
+
+describe('reorderHabits', () => {
+  const add = (id: string, name: string) =>
+    createHabit(db, { userId: user, id, now: NOW, fields: fields({ name }) });
+  const names = () => listActiveHabits(db, user).map((h) => h.name);
+  const LATER = NOW + 60_000;
+
+  it('saves the new order and stamps only the habits that moved', () => {
+    add('a', 'A');
+    add('b', 'B');
+    add('c', 'C');
+    reorderHabits(db, user, ['a', 'c', 'b'], LATER);
+
+    expect(names()).toEqual(['A', 'C', 'B']);
+    const stamp = (id: string) => getHabit(db, user, id)?.clientUpdatedAt;
+    expect(stamp('a')).toBe(new Date(NOW).toISOString());
+    expect(stamp('b')).toBe(new Date(LATER).toISOString());
+    expect(stamp('c')).toBe(new Date(LATER).toISOString());
+  });
+
+  it('moves only the listed habits, keeping the others in their place', () => {
+    add('a', 'A');
+    add('x', 'Not today');
+    add('b', 'B');
+    add('c', 'C');
+    reorderHabits(db, user, ['c', 'a', 'b'], LATER);
+
+    expect(names()).toEqual(['C', 'Not today', 'A', 'B']);
+  });
+
+  it('ignores ids of archived or unknown habits', () => {
+    add('a', 'A');
+    add('b', 'B');
+    archiveHabit(db, user, 'b', NOW);
+    reorderHabits(db, user, ['b', 'zzz', 'a'], LATER);
+
+    expect(names()).toEqual(['A']);
   });
 });

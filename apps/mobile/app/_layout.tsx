@@ -9,6 +9,8 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { DatabaseGate } from '@/db/database-gate';
 import { useAppArea } from '@/features/session/use-session';
@@ -34,12 +36,13 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
-    <>
+    // Gesture Handler (drag to reorder) needs its root view above every screen.
+    <GestureHandlerRootView style={styles.root}>
       <StatusBar style="light" />
       <DatabaseGate>
         <GuardedStack />
       </DatabaseGate>
-    </>
+    </GestureHandlerRootView>
   );
 }
 
@@ -64,3 +67,7 @@ function GuardedStack() {
     </Stack>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg },
+});

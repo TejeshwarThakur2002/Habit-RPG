@@ -5,7 +5,7 @@ module.exports = {
     {
       displayName: 'app',
       preset: 'jest-expo',
-      setupFilesAfterEnv: ['<rootDir>/../../packages/ui/jest.setup.js'],
+      setupFilesAfterEnv: ['<rootDir>/../../packages/ui/jest.setup.js', '<rootDir>/jest.setup.js'],
       testPathIgnorePatterns: ['/node_modules/', '<rootDir>/src/db/'],
     },
     {

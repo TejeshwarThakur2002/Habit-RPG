@@ -7,7 +7,7 @@ import { and, eq, sql } from 'drizzle-orm';
 
 import { habits } from '../schema';
 import type { AppDb } from '../types';
-import { getProfile, type Habit } from './hero';
+import { getProfile, listActiveHabits, type Habit } from './hero';
 
 export interface HabitFields {
   name: string;
@@ -81,4 +81,24 @@ export function archiveHabit(db: AppDb, userId: string, habitId: string, now: nu
 
 export function deleteHabit(db: AppDb, userId: string, habitId: string, now: number): void {
   touch(db, userId, habitId, now, { deletedAt: new Date(now).toISOString() });
+}
+
+/**
+ * Saves a new order for some of the active habits, e.g. today's quests after a drag. The
+ * listed habits take over the places they held between them, in the new order, so habits
+ * not on screen (other days' quests) keep their place. Every active habit is renumbered
+ * 0, 1, 2... which also repairs duplicate sort orders; only rows whose number changes are
+ * written, so sync uploads just those.
+ */
+export function reorderHabits(db: AppDb, userId: string, orderedIds: string[], now: number): void {
+  db.transaction((tx) => {
+    const current = listActiveHabits(tx, userId);
+    const moving = new Set(orderedIds);
+    const queue = orderedIds.filter((id) => current.some((h) => h.id === id));
+    const next = current.map((h) => (moving.has(h.id) ? (queue.shift() ?? h.id) : h.id));
+    next.forEach((id, index) => {
+      const habit = current.find((h) => h.id === id);
+      if (habit && habit.sortOrder !== index) touch(tx, userId, id, now, { sortOrder: index });
+    });
+  });
 }

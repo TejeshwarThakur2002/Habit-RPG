@@ -1,8 +1,8 @@
-import { memo } from 'react';
+import { memo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
 
-import { borders, colors, radii, type } from '../tokens';
+import { MIN_TOUCH, borders, colors, radii, type } from '../tokens';
 
 export interface HabitRowProps {
   name: string;
@@ -16,6 +16,11 @@ export interface HabitRowProps {
   onToggle: () => void;
   /** Long press, or the screen reader "Edit" action, opens the habit sheet. */
   onEdit?: () => void;
+  /** A `DragHandle` at the right edge, for lists that can be reordered. */
+  dragHandle?: ReactNode;
+  /** Screen reader "Move up" / "Move down" actions, the accessible way to reorder. */
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
 // A chunky pixel check on a 7 x 7 grid of 2-unit cells. Whole-unit cells keep it sharp,
@@ -45,46 +50,81 @@ export function habitRowLabel(props: Pick<HabitRowProps, 'name' | 'meta' | 'rewa
 
 /** SCOPE.md section 5.2 HabitRow: todo, done and bad-habit states, at least 58 tall. */
 export const HabitRow = memo(function HabitRow(props: HabitRowProps) {
-  const { name, meta, rewardXp, done, bad, onToggle, onEdit } = props;
+  const { name, meta, rewardXp, done, bad, onToggle, onEdit, dragHandle } = props;
+  const actions = rowActions(props);
   return (
-    <Pressable
-      accessibilityRole="checkbox"
-      accessibilityLabel={habitRowLabel(props)}
-      accessibilityState={{ checked: done }}
-      accessibilityActions={onEdit ? [{ name: 'activate' }, { name: 'edit', label: 'Edit' }] : []}
-      onAccessibilityAction={(e) => (e.nativeEvent.actionName === 'edit' ? onEdit?.() : onToggle())}
-      onPress={onToggle}
-      onLongPress={onEdit}
-      style={[styles.row, done && styles.rowDone, bad && styles.rowBad]}
-    >
-      <View style={[styles.box, done && styles.boxDone]}>
-        {done && (
-          <Svg width={14} height={14} viewBox="0 0 14 14">
-            {CHECK_PIXELS.map(([x, y]) => (
-              <Rect key={`${x}-${y}`} x={x * 2} y={y * 2} width={2} height={2} fill={colors.bg} />
-            ))}
-          </Svg>
-        )}
-      </View>
-      <View style={styles.text}>
-        <Text style={[type.bodyStrong, done && styles.nameDone]}>{name}</Text>
-        <Text style={type.meta}>{meta}</Text>
-      </View>
-      <Text style={[type.reward, { color: done ? colors.teal : bad ? colors.red : colors.gold }]}>
-        {done ? 'Done' : `+${rewardXp} XP`}
-      </Text>
-    </Pressable>
+    <View style={[styles.row, done && styles.rowDone, bad && styles.rowBad]}>
+      <Pressable
+        accessibilityRole="checkbox"
+        accessibilityLabel={habitRowLabel(props)}
+        accessibilityState={{ checked: done }}
+        accessibilityActions={actions.length > 0 ? [{ name: 'activate' }, ...actions] : []}
+        onAccessibilityAction={(e) => {
+          const handler = actions.find((a) => a.name === e.nativeEvent.actionName)?.run;
+          (handler ?? onToggle)();
+        }}
+        onPress={onToggle}
+        onLongPress={onEdit}
+        style={[styles.press, dragHandle !== undefined && styles.pressWithHandle]}
+      >
+        <View style={[styles.box, done && styles.boxDone]}>
+          {done && (
+            <Svg width={14} height={14} viewBox="0 0 14 14">
+              {CHECK_PIXELS.map(([x, y]) => (
+                <Rect key={`${x}-${y}`} x={x * 2} y={y * 2} width={2} height={2} fill={colors.bg} />
+              ))}
+            </Svg>
+          )}
+        </View>
+        <View style={styles.text}>
+          <Text style={[type.bodyStrong, done && styles.nameDone]}>{name}</Text>
+          <Text style={type.meta}>{meta}</Text>
+        </View>
+        <Text style={[type.reward, { color: done ? colors.teal : bad ? colors.red : colors.gold }]}>
+          {done ? 'Done' : `+${rewardXp} XP`}
+        </Text>
+      </Pressable>
+      {dragHandle}
+    </View>
   );
 });
+
+function rowActions(props: HabitRowProps) {
+  const all = [
+    { name: 'edit', label: 'Edit', run: props.onEdit },
+    { name: 'moveUp', label: 'Move up', run: props.onMoveUp },
+    { name: 'moveDown', label: 'Move down', run: props.onMoveDown },
+  ];
+  return all.filter((a): a is typeof a & { run: () => void } => a.run !== undefined);
+}
+
+/**
+ * Three pixel bars to press and drag. Screen readers skip it: they can't drag, and the row
+ * offers "Move up" and "Move down" instead.
+ */
+export function DragHandle({ onPressIn }: { onPressIn: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Drag to reorder"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      hitSlop={6}
+      onPressIn={onPressIn}
+      style={styles.handle}
+    >
+      {[0, 1, 2].map((i) => (
+        <View key={i} style={styles.handleBar} />
+      ))}
+    </Pressable>
+  );
+}
 
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
     minHeight: 58,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
     borderRadius: radii.row,
     borderWidth: borders.card,
     borderColor: colors.border,
@@ -92,6 +132,26 @@ const styles = StyleSheet.create({
   },
   rowDone: { backgroundColor: colors.surfaceNav },
   rowBad: { borderColor: colors.badHabitBorder },
+  press: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    alignSelf: 'stretch',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  pressWithHandle: { paddingRight: 4 },
+  handle: {
+    width: MIN_TOUCH,
+    alignSelf: 'stretch',
+    minHeight: MIN_TOUCH,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    marginRight: 4,
+  },
+  handleBar: { width: 16, height: 3, backgroundColor: colors.muted },
   box: {
     width: 26,
     height: 26,

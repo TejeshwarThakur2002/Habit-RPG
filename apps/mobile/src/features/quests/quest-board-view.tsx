@@ -1,6 +1,5 @@
 import {
   Button,
-  HabitRow,
   MIN_TOUCH,
   ScreenHeader,
   SyncPill,
@@ -11,15 +10,16 @@ import {
   spacing,
   type,
 } from '@habit-rpg/ui';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ScrollViewContainer } from 'react-native-reorderable-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { QuestBoard } from '@/db/queries/quest-board';
 
 import { BossMiniCard } from './boss-mini-card';
-import { habitMeta } from './habit-meta';
 import { HeroCard } from './hero-card';
 import { LaterThisWeek } from './later-this-week';
+import { TodayList } from './today-list';
 
 export interface QuestBoardViewProps {
   board: QuestBoard;
@@ -29,18 +29,20 @@ export interface QuestBoardViewProps {
   onAdd: () => void;
   /** Opens the habit sheet for an existing quest (long press or the "Edit" action). */
   onEdit: (habitId: string) => void;
+  /** Saves today's quests in a new order (drag handle or "Move up" / "Move down"). */
+  onReorder: (habitIds: string[]) => void;
 }
 
 /** The Quests tab (SCOPE.md section 5.4). */
 export function QuestBoardView(props: QuestBoardViewProps) {
-  const { board, onToggle, onOpenParty, onAdd, onEdit } = props;
+  const { board, onToggle, onOpenParty, onAdd, onEdit, onReorder } = props;
   const insets = useSafeAreaInsets();
   const doneCount = board.today.filter((q) => q.doneToday).length;
   const allDone = board.today.length > 0 && doneCount === board.today.length;
   const noQuests = board.today.length === 0 && board.laterThisWeek.length === 0;
 
   return (
-    <ScrollView
+    <ScrollViewContainer
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
     >
@@ -72,19 +74,13 @@ export function QuestBoardView(props: QuestBoardViewProps) {
             </View>
           )}
 
-          <View style={styles.list}>
-            {board.today.map(({ habit, rewardXp, doneToday }) => (
-              <HabitRow
-                key={habit.id}
-                name={habit.name}
-                meta={habitMeta(habit)}
-                rewardXp={rewardXp}
-                done={doneToday}
-                bad={habit.type === 'bad'}
-                onToggle={() => onToggle(habit.id, doneToday)}
-                onEdit={() => onEdit(habit.id)}
-              />
-            ))}
+          <View>
+            <TodayList
+              quests={board.today}
+              onToggle={onToggle}
+              onEdit={onEdit}
+              onReorder={onReorder}
+            />
             <AddQuestRow onPress={onAdd} />
           </View>
           <LaterThisWeek habits={board.laterThisWeek} />
@@ -92,7 +88,7 @@ export function QuestBoardView(props: QuestBoardViewProps) {
       )}
 
       <BossMiniCard boss={board.boss} onPress={onOpenParty} />
-    </ScrollView>
+    </ScrollViewContainer>
   );
 }
 
@@ -124,7 +120,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { gap: spacing.section, paddingHorizontal: spacing.screenX, paddingBottom: 32 },
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  list: { gap: spacing.row },
   banner: {
     paddingVertical: 10,
     paddingHorizontal: 14,
