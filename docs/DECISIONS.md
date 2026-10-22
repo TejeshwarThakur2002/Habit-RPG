@@ -209,3 +209,12 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **The live numbers** under the difficulty ("+20 XP · +6 gold · −6 HP if missed") come from `game-core`'s base values, before streak and stat bonuses.
 - **Not in this PR:** the optional daily reminder time (it needs notification permissions and scheduling, so it lands with F9 reminders), and drag to reorder (its own F2 PR). New quests go to the end of the list.
 - **`cleanText`** moved from onboarding to `src/lib/text.ts`, shared by hero and quest names.
+
+## D22. Reordering quests (decided with the owner, 2026-10-22)
+
+- **A drag handle starts the drag.** Long press already opens the habit sheet (SCOPE.md section 5.4), so the owner chose a handle (three bars) at the right edge of each of today's quests instead of a long-press drag or a separate reorder mode. Tap still completes and long press still edits.
+- **Screen readers get "Move up" and "Move down"** actions on each row, since they can't drag (section 5.10). The handle itself is hidden from them.
+- **Versions:** `react-native-gesture-handler` 3.3.0 (the version Expo SDK 58 pins; `GestureHandlerRootView` now wraps the app) and `react-native-reorderable-list` 0.18.2, whose `NestedReorderableList` and `ScrollViewContainer` let the list sit inside the scrolling board. Gesture Handler 3 still runs the older `Gesture.Pan()` API the library uses. `react-native-draggable-flatlist` was the other option but hasn't been updated since 2025.
+- **What gets saved:** only today's quests are on screen, so `reorderHabits` gives the moved quests the places they held between them and leaves other days' quests where they are. Active habits are renumbered 0, 1, 2… and only rows whose number changes are written and stamped for sync.
+- **Tests:** dragging can't run in Jest, so the app's tests swap the list for plain views (`apps/mobile/jest.setup.js`) and cover reordering through the Move up / Move down actions, the `moveItem` helper and the query tests on sql.js. Dragging was checked on the iPhone simulator.
+- **Known noise:** in development the library makes Reanimated warn "Dependencies should only be used on the web". It is harmless and comes from the library, not our code.
