@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
-import { HabitRow, habitRowLabel } from '../components/habit-row';
+import { DragHandle, HabitRow, habitRowLabel } from '../components/habit-row';
 import { Heatmap, heatLevel } from '../components/heatmap';
 import { BattleLogLine, BossCard, MemberRow, formatNumber } from '../components/party';
 import { ShopItem } from '../components/shop-item';
@@ -41,6 +41,38 @@ describe('HabitRow', () => {
     await fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
     expect(onEdit).toHaveBeenCalledTimes(2);
     expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers Move up and Move down to screen readers, and shows a drag handle', async () => {
+    const onMoveUp = jest.fn();
+    const onMoveDown = jest.fn();
+    const onDrag = jest.fn();
+    await render(
+      <HabitRow
+        {...props}
+        done={false}
+        onToggle={jest.fn()}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        dragHandle={<DragHandle onPressIn={onDrag} />}
+      />,
+    );
+    const row = screen.getByRole('checkbox');
+    expect(row.props.accessibilityActions.map((a: { name: string }) => a.name)).toEqual([
+      'activate',
+      'moveUp',
+      'moveDown',
+    ]);
+    await fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'moveUp' } });
+    await fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'moveDown' } });
+    expect(onMoveUp).toHaveBeenCalledTimes(1);
+    expect(onMoveDown).toHaveBeenCalledTimes(1);
+
+    await fireEvent(
+      screen.getByLabelText('Drag to reorder', { includeHiddenElements: true }),
+      'pressIn',
+    );
+    expect(onDrag).toHaveBeenCalledTimes(1);
   });
 });
 
