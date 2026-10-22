@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 
 import { db } from '@/db/client';
 import { completeHabit, undoCompletion } from '@/db/queries/completions';
+import { reorderHabits } from '@/db/queries/habits';
 import { getProfile } from '@/db/queries/hero';
 import { getQuestBoard } from '@/db/queries/quest-board';
 import { LOCAL_USER_ID } from '@/db/types';
@@ -34,6 +35,7 @@ export default function Quests() {
       onOpenParty={() => router.navigate('/party')}
       onAdd={() => router.push('/modal/habit/new')}
       onEdit={(habitId) => router.push({ pathname: '/modal/habit/[id]', params: { id: habitId } })}
+      onReorder={(habitIds) => reorderHabits(db, LOCAL_USER_ID, habitIds, Date.now())}
     />
   );
 }

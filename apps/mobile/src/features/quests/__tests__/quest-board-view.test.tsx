@@ -5,6 +5,7 @@ import type { QuestBoard } from '@/db/queries/quest-board';
 
 import { habitMeta, weekdayList } from '../habit-meta';
 import { QuestBoardView } from '../quest-board-view';
+import { moveItem } from '../today-list';
 
 const habit = (id: string, overrides: Partial<Habit> = {}): Habit => ({
   id,
@@ -50,6 +51,7 @@ async function show(b: QuestBoard) {
     onOpenParty: jest.fn(),
     onAdd: jest.fn(),
     onEdit: jest.fn(),
+    onReorder: jest.fn(),
   };
   await render(<QuestBoardView board={b} {...handlers} />);
   return handlers;
@@ -81,6 +83,21 @@ describe('QuestBoardView', () => {
     expect(onAdd).toHaveBeenCalled();
     await fireEvent(screen.getByRole('checkbox', { name: /^Code for 1 hour/ }), 'longPress');
     expect(onEdit).toHaveBeenCalledWith('Code for 1 hour');
+  });
+
+  it('reorders with the screen reader Move up and Move down actions', async () => {
+    const { onReorder } = await show(board());
+    const first = screen.getByRole('checkbox', { name: /^Drink water/ });
+    const last = screen.getByRole('checkbox', { name: /^Code for 1 hour/ });
+    const actionNames = (el: typeof first) =>
+      el.props.accessibilityActions.map((a: { name: string }) => a.name);
+    expect(actionNames(first)).not.toContain('moveUp');
+    expect(actionNames(last)).not.toContain('moveDown');
+
+    await fireEvent(first, 'accessibilityAction', { nativeEvent: { actionName: 'moveDown' } });
+    expect(onReorder).toHaveBeenLastCalledWith(['Code for 1 hour', 'Drink water']);
+    await fireEvent(last, 'accessibilityAction', { nativeEvent: { actionName: 'moveUp' } });
+    expect(onReorder).toHaveBeenLastCalledWith(['Code for 1 hour', 'Drink water']);
   });
 
   it('shows the real reward on an open quest', async () => {
@@ -121,5 +138,14 @@ describe('habitMeta', () => {
     expect(habitMeta(habit('a', { difficulty: 'easy' }))).toBe('Daily · Easy');
     expect(habitMeta(habit('b', { type: 'bad' }))).toBe('Bad habit · lose 8 HP if broken');
     expect(weekdayList(127)).toBe('Mon, Tue, Wed, Thu, Fri, Sat, Sun');
+  });
+});
+
+describe('moveItem', () => {
+  it('moves one item and leaves the input alone', () => {
+    const list = ['a', 'b', 'c', 'd'];
+    expect(moveItem(list, 0, 2)).toEqual(['b', 'c', 'a', 'd']);
+    expect(moveItem(list, 3, 1)).toEqual(['a', 'd', 'b', 'c']);
+    expect(list).toEqual(['a', 'b', 'c', 'd']);
   });
 });
