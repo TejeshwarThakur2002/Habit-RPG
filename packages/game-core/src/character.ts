@@ -8,8 +8,8 @@ import {
   STAT_CAP,
   XP_TO_NEXT_BASE,
   XP_TO_NEXT_PER_LEVEL,
-} from './constants';
-import { clamp } from './math';
+} from './constants.ts';
+import { clamp } from './math.ts';
 
 /** The progress part of a hero; stats are derived, never stored (SCOPE.md section 3). */
 export interface Hero {

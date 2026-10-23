@@ -78,7 +78,15 @@ jobs:
       # Applies every migration and the seed from scratch, so a broken migration fails the PR.
       - run: pnpm exec supabase db reset
 
-      # pgTAP (RLS) and Deno tests are added here in P3.
+      # Edge Functions run on Deno; the copy of game-core they import must match packages/ (D5).
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: 2.9.7
+
+      - run: pnpm functions:check
+      - run: pnpm functions:test
+
+      # pgTAP (RLS) tests are added here in P3.
 
       - if: always()
         run: pnpm exec supabase stop --no-backup

@@ -62,6 +62,8 @@ Decision:
 
 The Supabase dependency docs recommend one `deno.json` per function and say nothing about importing local TypeScript from outside `supabase/functions`. The method (a relative import through `deno.json` imports, or a build-time copy into `supabase/functions/_shared`) is decided and tested in CI before `game-core` is first imported by a function (P3), and recorded here.
 
+**Resolved in D31** (owner's choice, 2026-10-23): a checked copy in `supabase/functions/_shared`.
+
 ## D6. Workspace scaffold choices (2026-10-20)
 
 - **pnpm 12 supply-chain policy kept on.** pnpm 12 refuses packages published within its minimum release age. Rather than adding `minimumReleaseAgeExclude` entries, Expo ranges are written as `~58.0.0` so pnpm picks the newest patch old enough to pass. Today that resolves `expo` 58.0.14 and `expo-router` 58.0.23, one or two patches behind what `expo-doctor` expects; the next `pnpm update` after the cutoff passes picks up the newer patches.
@@ -295,3 +297,12 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **Offline in demo mode:** the app has no network code yet (no fetch, WebSocket or Supabase client; fonts are bundled). A scripted demo tour (complete a quest, visit every tab) ran while Expo Go's connections were recorded: only the local dev server and Google addresses that belong to Expo Go itself. The Mac's network was not switched off for this check, because the simulator shares it.
 - **D11 is settled: `Intl` time zones work on Hermes.** A reminder computed by game-core in America/Toronto fired at the right minute, and on the simulator Settings accepted "Pacific/Auckland" and refused "Mars/Olympus".
 - **Deferred to later phases:** Delete account and real sign-in (P3); the outbox and sync (P4); the party screens (P5); the `e2e.yml` CI workflow, which needs a development build; the privacy policy page; the hosted Supabase project (the owner's call). Still open: D5 (sharing game-core with Deno), due before P3.
+
+## D31. Sharing game-core with Edge Functions (decided by the owner, 2026-10-23)
+
+- **Resolves D5 with a checked copy.** `scripts/copy-functions-shared.mjs` (`pnpm functions:shared`) copies `packages/game-core/src` and `packages/shared/src`, without tests, into `supabase/functions/_shared/game-core` and `_shared/shared`, each file with a "generated, do not edit" header. Functions import `../_shared/game-core/index.ts`. The owner chose this over importing the packages in place through `deno.json`, because Supabase's docs don't say whether a deploy bundles files outside `supabase/functions`, and that couldn't be tested before a hosted project exists.
+- **The copy can't drift:** `pnpm functions:shared --check` fails if any copied file differs, is missing or is extra. It runs in CI and in `pnpm functions:check`, and the pre-commit hook runs the same check whenever a file in `packages/game-core/src` or `packages/shared/src` is committed, so a stale copy is caught before it reaches a PR.
+- **Explicit `.ts` imports in game-core and shared** (`'./dates.ts'`, not `'./dates'`), because Deno requires file extensions. TypeScript allows them with `allowImportingTsExtensions` (in `tsconfig.base.json` and the app, ui and sprites configs, which type-check game-core's source); Metro, Jest and Vitest resolve them unchanged. Checked: typecheck, all unit tests and `npx expo export --platform ios`.
+- **Deno 2.9.7** locally and in CI (`denoland/setup-deno` v2.0.5, pinned by commit SHA). `supabase/functions/tests` holds the Deno tests with their own `deno.json` and `deno.lock` (`@std/assert` 1.0.19). The first test runs the golden vectors (`packages/game-core/golden/vectors.json`) against the copy: 13 pass, the same cases Vitest checks against the source.
+- **Linting Deno code:** ESLint skips `supabase/functions`, whose Expo rules don't fit Deno; `pnpm functions:check` runs `deno lint` and `deno check` there instead. Prettier still formats function code but skips the generated copy and Deno lockfiles.
+- **Still to do when functions arrive:** each function gets its own `deno.json` (Supabase's recommendation), which will also map `zod` to an `npm:` specifier for the copied `shared` schemas.

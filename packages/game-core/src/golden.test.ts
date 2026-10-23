@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import vectors from '../golden/vectors.json';
-import { bossMaxHp, applyBossDamage } from './boss';
-import { applyHpChange, applyXp, type Hero } from './character';
-import { baseValues, type Difficulty, type HabitType } from './constants';
-import { computeReward } from './rewards';
+import { bossMaxHp, applyBossDamage } from './boss.ts';
+import { applyHpChange, applyXp, type Hero } from './character.ts';
+import { baseValues, type Difficulty, type HabitType } from './constants.ts';
+import { computeReward } from './rewards.ts';
 
 // The same file is checked by the Deno Edge Function tests in P3 (SCOPE.md section 13.1).
 describe('golden vectors', () => {

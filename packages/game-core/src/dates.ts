@@ -3,7 +3,7 @@
 // arithmetic, so 23- and 25-hour daylight-saving days work. Uses only the built-in Intl API
 // (Hermes and Deno both ship it), keeping game-core dependency-free (DECISIONS.md D11).
 
-import type { HabitType } from './constants';
+import type { HabitType } from './constants.ts';
 
 /** A calendar date, 'YYYY-MM-DD'. Plain string comparison orders these correctly. */
 export type LocalDate = string;

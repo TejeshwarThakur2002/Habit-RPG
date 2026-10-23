@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ClosingHabit } from './day-close';
-import { HEATMAP_DAYS, completionRate, heatmapCounts, heatmapSummary, monthStart } from './stats';
+import type { ClosingHabit } from './day-close.ts';
+import {
+  HEATMAP_DAYS,
+  completionRate,
+  heatmapCounts,
+  heatmapSummary,
+  monthStart,
+} from './stats.ts';
 
 const habit = (overrides: Partial<ClosingHabit> & { id: string }): ClosingHabit => ({
   type: 'daily',

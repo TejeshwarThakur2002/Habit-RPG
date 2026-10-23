@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { ALL_WEEKDAYS } from './dates';
+import { ALL_WEEKDAYS } from './dates.ts';
 import {
   MAX_REMINDERS,
   parseTime,
   upcomingReminders,
   zonedInstant,
   type ReminderHabit,
-} from './reminders';
+} from './reminders.ts';
 
 const TORONTO = 'America/Toronto';
 const iso = (at: number) => new Date(at).toISOString();

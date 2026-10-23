@@ -1,8 +1,8 @@
 // Numbers for the Stats screen (SCOPE.md F6), from local data only. Pure: callers pass the
 // habits, which (habit, day) pairs were completed, and today.
 
-import { addDays, isScheduledOn, weekday, type LocalDate } from './dates';
-import { isActiveOn, type ClosingHabit } from './day-close';
+import { addDays, isScheduledOn, weekday, type LocalDate } from './dates.ts';
+import { isActiveOn, type ClosingHabit } from './day-close.ts';
 
 /** True when `habitId` has an active (not undone) completion on `date`. */
 export type IsDone = (habitId: string, date: LocalDate) => boolean;

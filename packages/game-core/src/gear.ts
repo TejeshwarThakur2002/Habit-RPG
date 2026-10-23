@@ -1,8 +1,8 @@
 // Gear (SCOPE.md section 3, "Gear"): cosmetic items with small bonuses, one per slot,
 // bought once with gold earned from habits and then equipped or unequipped for free.
 
-import { categoryStat, luckStat, maxHp } from './character';
-import type { Category, StatName } from './constants';
+import { categoryStat, luckStat, maxHp } from './character.ts';
+import type { Category, StatName } from './constants.ts';
 
 export type GearSlot = 'weapon' | 'off-hand' | 'head' | 'feet' | 'trinket' | 'back';
 export type GearId =
