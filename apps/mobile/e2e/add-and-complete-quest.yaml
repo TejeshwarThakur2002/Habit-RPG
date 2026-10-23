@@ -1,0 +1,47 @@
+# SCOPE.md P2: "add habit, complete it, see XP". Runs in Expo Go against the dev server, so
+# it opens the project URL instead of launching an app id (Maestro's Expo guide).
+appId: host.exp.Exponent
+name: Add a quest, complete it, see XP
+env:
+  APP_URL: exp://127.0.0.1:8095
+---
+# A cold start, so a sheet left open by an earlier run can't get in the way.
+- stopApp
+- openLink: ${APP_URL}
+- extendedWaitUntil:
+    visible: 'Quests tab|Start without an account|Step 1 of 3'
+    timeout: 60000
+- runFlow: subflows/start-fresh-hero.yaml
+
+# A new local hero: level 1, 44 HP, no XP (F1).
+- tapOn:
+    id: 'hero-name'
+- inputText: 'Maestro'
+- tapOn: 'Next'
+- tapOn: 'Next'
+- tapOn: 'Begin your adventure'
+- extendedWaitUntil:
+    visible: 'Maestro, a level 1 knight'
+    timeout: 15000
+- assertVisible: '0 of 200'
+
+# Add a daily quest (F2).
+- tapOn: 'Add a quest'
+- tapOn:
+    id: 'habit-name'
+# One word, so iOS typing predictions can't change it.
+- inputText: 'Stretch'
+# Tapping the title closes the keyboard so it can't swallow the next tap.
+- tapOn: 'New quest'
+- tapOn: 'Add quest'
+# The reward includes the hero's bonuses from game-core, so only its shape is checked here.
+- extendedWaitUntil:
+    visible: 'Stretch, daily, medium, plus \d+ XP, not done'
+    timeout: 10000
+
+# Complete it and see the XP land on the hero card (F3).
+- tapOn: 'Stretch, daily, medium, plus \d+ XP, not done'
+- assertVisible: 'Stretch, daily, medium, plus \d+ XP, done'
+# The XP bar (read out as "21 of 200") is no longer empty.
+- assertVisible: '[1-9]\d* of 200'
+- assertVisible: '1 of 1 done'

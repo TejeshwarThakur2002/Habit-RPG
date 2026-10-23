@@ -13,6 +13,7 @@
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "e2e": "pnpm --filter @habit-rpg/mobile e2e",
     "prepare": "husky",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
