@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { Button } from '../components/button';
+import { GearIcon, IconButton } from '../components/icon-button';
 import { Chip, ScreenHeader, StatChip } from '../components/small';
 import { StatBar } from '../components/stat-bar';
 import { SyncPill, syncPillText } from '../components/sync-pill';
@@ -82,5 +83,20 @@ describe('small components', () => {
     expect(screen.getByLabelText('STR 14')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'INT 19' }));
     expect(onPress).toHaveBeenCalled();
+  });
+});
+
+describe('IconButton', () => {
+  it('is a 44 pt labelled button around its icon', async () => {
+    const onPress = jest.fn();
+    await render(
+      <IconButton label="Settings" hint="Opens Settings" onPress={onPress}>
+        <GearIcon />
+      </IconButton>,
+    );
+    const button = screen.getByRole('button', { name: 'Settings' });
+    expect(button).toHaveStyle({ width: 44, height: 44 });
+    await fireEvent.press(button);
+    expect(onPress).toHaveBeenCalledTimes(1);
   });
 });
