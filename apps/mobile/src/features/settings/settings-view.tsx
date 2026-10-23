@@ -28,6 +28,8 @@ export interface SettingsViewProps {
   onSaveHero: (fields: HeroFields) => void;
   onReduceMotion: (value: ReduceMotionSetting) => void;
   onSignOut: () => void;
+  /** Opens "Link an account" for a hero made without one (D34). */
+  onLinkAccount: () => void;
   onClose: () => void;
 }
 
@@ -52,7 +54,7 @@ function accountCopy(mode: AccountMode, email: string | null) {
     };
   }
   return {
-    text: 'You are playing without an account, so your hero is saved only on this phone. Signing out deletes it.',
+    text: 'You are playing without an account, so your hero is saved only on this phone. Link an account to keep it, or sign out to delete it.',
     button: 'Sign out',
   };
 }
@@ -98,6 +100,9 @@ export function SettingsView(props: SettingsViewProps) {
 
       <Section title="Account">
         <Text style={type.secondary}>{account.text}</Text>
+        {props.mode === 'local' && (
+          <Button label="Link an account" variant="secondary" onPress={props.onLinkAccount} />
+        )}
         <Button label={account.button} variant="danger" onPress={props.onSignOut} />
       </Section>
 

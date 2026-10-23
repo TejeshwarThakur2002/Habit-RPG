@@ -20,6 +20,7 @@ async function setup(mode: AccountMode = 'local', deviceTimeZone = 'America/Toro
     onSaveHero: jest.fn(),
     onReduceMotion: jest.fn(),
     onSignOut: jest.fn(),
+    onLinkAccount: jest.fn(),
     onClose: jest.fn(),
   };
   await render(<SettingsView {...props} />);
@@ -79,15 +80,20 @@ describe('SettingsView', () => {
     expect(onReduceMotion).toHaveBeenCalledWith('on');
   });
 
-  it('warns a local hero that signing out deletes them', async () => {
-    const { onSignOut } = await setup('local');
-    expect(screen.getByText(/Signing out deletes it/)).toBeOnTheScreen();
+  it('offers a local hero a way to keep their progress, or to sign out and delete it', async () => {
+    const { onSignOut, onLinkAccount } = await setup('local');
+    expect(
+      screen.getByText(/Link an account to keep it, or sign out to delete it/),
+    ).toBeOnTheScreen();
+    await fireEvent.press(button('Link an account'));
+    expect(onLinkAccount).toHaveBeenCalledTimes(1);
     await fireEvent.press(button('Sign out'));
     expect(onSignOut).toHaveBeenCalledTimes(1);
   });
 
   it('shows the signed-in email and that the hero is not synced yet', async () => {
     const { onSignOut } = await setup('account');
+    expect(screen.queryByRole('button', { name: 'Link an account' })).toBeNull();
     expect(screen.getByText(/Signed in as ada@example.com/)).toBeOnTheScreen();
     expect(
       screen.getByText(/syncing it to your account comes in a later update/),

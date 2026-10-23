@@ -331,3 +331,10 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **Emails send a code, not a link.** `supabase/templates/sign-in-code.html` replaces the magic-link and confirmation templates in `config.toml` ("Your Habit RPG code", valid for 1 hour, the Supabase default). The minimum gap between emails is 30 seconds, matching the resend button. Locally the emails land in Mailpit; the hosted project gets custom SMTP (Resend, P0 answer 5) when it is created.
 - **Bug found on the simulator and fixed:** after signing out, the router sometimes landed on `(auth)/verify` with no email, whose `router.back()` had nowhere to go and left a blank screen. Verify now redirects to sign-in instead.
 - **Until sync exists, signing out still deletes the hero from the phone,** so Settings and the confirmation say so ("syncing it to your account comes in a later update").
+
+## D34. Linking a local hero to an account (decided by the owner, 2026-10-23)
+
+- **The owner chose to keep a local hero at sign-in** (D33). A player who started without an account never sees the sign-in screen again, so Settings now offers "Link an account" (only in that mode, next to Sign out). It opens `modal/link-account`: the same email and code steps as sign-in, with "Sign in with your email to keep {hero} on your account" and Cancel.
+- **Linking records only the account.** `recordSignIn` stores the account id and email and turns `local_only` off; the profile, hero, quests, completions and gold are untouched, so the player carries on exactly where they were. Settings then shows "Signed in as …". A query test checks every row survives, and on the simulator a local hero "Linky" with a completed quest was linked with a real emailed code and kept both.
+- **The email field and "Send code" moved into `EmailForm`,** shared by the sign-in screen and the link sheet, so both validate and report errors the same way.
+- **Not yet:** the linked hero reaches the server with sync (P4). If the account already has a hero from another phone, sync will have to ask which one to keep; that choice is designed with the sync engine.

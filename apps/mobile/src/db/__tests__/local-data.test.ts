@@ -1,7 +1,9 @@
 import { counterIds, createTestDb } from '../../test/test-db';
+import { createHabit } from '../queries/habits';
 import { getCharacter, getProfile, listActiveHabits } from '../queries/hero';
 import { createHero, recordSignIn, resetLocalData } from '../queries/local-data';
 import { getSettings, updateSettings } from '../queries/settings';
+import { characters } from '../schema';
 import { seedDemo } from '../seed-demo';
 import { LOCAL_USER_ID, type AppDb } from '../types';
 
@@ -73,5 +75,41 @@ describe('recordSignIn', () => {
 
     resetLocalData(db);
     expect(getSettings(db)).toMatchObject({ accountUserId: null, accountEmail: null });
+  });
+});
+
+describe('linking a local hero to an account (D34)', () => {
+  it('keeps the hero, quests and gold, and stops counting as local-only', () => {
+    updateSettings(db, { localOnly: true });
+    createHero(db, { heroName: 'Ada', heroClass: 'mage', timeZone: TZ, now: NOW });
+    createHabit(db, {
+      userId: LOCAL_USER_ID,
+      id: 'h1',
+      now: NOW,
+      fields: {
+        name: 'Read',
+        type: 'daily',
+        difficulty: 'easy',
+        category: 'mind',
+        weekdays: 127,
+        reminderTime: null,
+      },
+    });
+    db.update(characters).set({ gold: 42 }).run();
+    const before = {
+      profile: getProfile(db, LOCAL_USER_ID),
+      habits: listActiveHabits(db, LOCAL_USER_ID),
+    };
+
+    recordSignIn(db, { id: 'user-1', email: 'ada@example.com' });
+
+    expect(getProfile(db, LOCAL_USER_ID)).toEqual(before.profile);
+    expect(listActiveHabits(db, LOCAL_USER_ID)).toEqual(before.habits);
+    expect(getCharacter(db, LOCAL_USER_ID)?.gold).toBe(42);
+    expect(getSettings(db)).toMatchObject({
+      localOnly: false,
+      onboardingDone: true,
+      accountUserId: 'user-1',
+    });
   });
 });

@@ -59,6 +59,7 @@ export default function Settings() {
             .then(() => resetLocalData(db));
         })
       }
+      onLinkAccount={() => router.push('/modal/link-account')}
       onClose={() => router.back()}
     />
   );
