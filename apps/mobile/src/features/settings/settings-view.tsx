@@ -13,14 +13,16 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HeroSection, type HeroFields } from './hero-section';
 import { NotificationsSection, type NotificationsSectionProps } from './notifications-section';
 
-/** Until accounts exist (P3) the player is either in the demo or playing without one (D19). */
-export type AccountMode = 'demo' | 'local';
+/** The demo, playing without an account (D19), or signed in with email (D33). */
+export type AccountMode = 'demo' | 'local' | 'account';
 
 export interface SettingsViewProps {
   hero: HeroFields;
   deviceTimeZone: string;
   reduceMotion: ReduceMotionSetting;
   mode: AccountMode;
+  /** The signed-in email, shown in account mode. */
+  email: string | null;
   version: string;
   notifications: NotificationsSectionProps;
   onSaveHero: (fields: HeroFields) => void;
@@ -35,20 +37,29 @@ const MOTION_OPTIONS = [
   { value: 'off', label: 'Off' },
 ] as const;
 
-const ACCOUNT = {
-  demo: {
-    text: 'This is the demo hero. Leaving clears the sample data from this phone.',
-    button: 'Leave the demo',
-  },
-  local: {
+function accountCopy(mode: AccountMode, email: string | null) {
+  if (mode === 'demo') {
+    return {
+      text: 'This is the demo hero. Leaving clears the sample data from this phone.',
+      button: 'Leave the demo',
+    };
+  }
+  if (mode === 'account') {
+    // Honest until sync arrives (P4): the hero is still only on this phone.
+    return {
+      text: `Signed in as ${email ?? 'your email'}. Your hero is saved on this phone; syncing it to your account comes in a later update.`,
+      button: 'Sign out',
+    };
+  }
+  return {
     text: 'You are playing without an account, so your hero is saved only on this phone. Signing out deletes it.',
     button: 'Sign out',
-  },
-} as const;
+  };
+}
 
 /** SCOPE.md section 5.8 Settings, opened from the gear on Stats. */
 export function SettingsView(props: SettingsViewProps) {
-  const account = ACCOUNT[props.mode];
+  const account = accountCopy(props.mode, props.email);
   return (
     <ScrollView
       style={styles.screen}

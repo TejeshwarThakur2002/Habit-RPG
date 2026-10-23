@@ -1,6 +1,6 @@
 import { counterIds, createTestDb } from '../../test/test-db';
 import { getCharacter, getProfile, listActiveHabits } from '../queries/hero';
-import { createHero, resetLocalData } from '../queries/local-data';
+import { createHero, recordSignIn, resetLocalData } from '../queries/local-data';
 import { getSettings, updateSettings } from '../queries/settings';
 import { seedDemo } from '../seed-demo';
 import { LOCAL_USER_ID, type AppDb } from '../types';
@@ -58,5 +58,20 @@ describe('resetLocalData', () => {
       localOnly: false,
       onboardingDone: false,
     });
+  });
+});
+
+describe('recordSignIn', () => {
+  it('stores the account so the route guard sees a session, and sign-out forgets it', () => {
+    seedDemo(db, { now: NOW, timeZone: TZ, newId: counterIds() });
+    recordSignIn(db, { id: 'user-1', email: 'ada@example.com' });
+    expect(getSettings(db)).toMatchObject({
+      accountUserId: 'user-1',
+      accountEmail: 'ada@example.com',
+      demoMode: false,
+    });
+
+    resetLocalData(db);
+    expect(getSettings(db)).toMatchObject({ accountUserId: null, accountEmail: null });
   });
 });

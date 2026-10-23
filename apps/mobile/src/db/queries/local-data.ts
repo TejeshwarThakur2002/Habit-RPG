@@ -26,7 +26,14 @@ export function deletePlayerData(tx: Writer): void {
 }
 
 // A pending faint belongs to the player, so it goes whenever player data does.
-const SIGNED_OUT = { demoMode: false, localOnly: false, onboardingDone: false, pendingFaint: null };
+const SIGNED_OUT = {
+  demoMode: false,
+  localOnly: false,
+  onboardingDone: false,
+  pendingFaint: null,
+  accountUserId: null,
+  accountEmail: null,
+};
 
 /** Leaves the demo (or the local game): wipes player data and returns to sign-in. */
 export function resetLocalData(db: AppDb): void {
@@ -37,6 +44,19 @@ export function resetLocalData(db: AppDb): void {
       .onConflictDoUpdate({ target: t.settings.id, set: SIGNED_OUT })
       .run();
   });
+}
+
+/**
+ * Records a successful email sign-in (SCOPE.md F1). The session itself is kept by supabase-js
+ * in secure storage; these settings let the route guard decide synchronously (D33). Without a
+ * hero yet, the route guard then opens onboarding.
+ */
+export function recordSignIn(db: AppDb, account: { id: string; email: string }): void {
+  const flags = { accountUserId: account.id, accountEmail: account.email, demoMode: false };
+  db.insert(t.settings)
+    .values({ id: 1, ...flags })
+    .onConflictDoUpdate({ target: t.settings.id, set: flags })
+    .run();
 }
 
 export interface NewHeroInput {

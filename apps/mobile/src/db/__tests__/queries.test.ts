@@ -25,6 +25,8 @@ describe('settings', () => {
       demoMode: false,
       localOnly: false,
       notificationHintSeen: false,
+      accountUserId: null,
+      accountEmail: null,
       pendingFaint: null,
     });
     expect(updateSettings(db, { reduceMotion: 'on' }).reduceMotion).toBe('on');

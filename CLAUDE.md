@@ -47,6 +47,8 @@ pnpm typecheck            # tsc in every workspace
 pnpm test                 # Vitest + Jest in every workspace
 pnpm e2e                  # Maestro flows (needs the dev server on port 8095 and a booted simulator)
 pnpm supabase:start       # local Supabase stack (needs Docker, e.g. OrbStack)
+                          # then put its API URL and publishable key in apps/mobile/.env;
+                          # sign-in codes land in Mailpit at http://127.0.0.1:54324
 pnpm supabase:stop
 pnpm exec supabase db reset   # re-apply migrations and seed locally
 pnpm db:test              # pgTAP database tests (schema rules and RLS) against the local stack

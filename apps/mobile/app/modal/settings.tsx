@@ -10,15 +10,17 @@ import { LOCAL_USER_ID } from '@/db/types';
 import { useDbQuery } from '@/db/use-db-query';
 import { useNotificationAccess } from '@/features/reminders/use-notification-access';
 import { confirmSignOut } from '@/features/settings/confirm-sign-out';
-import { SettingsView } from '@/features/settings/settings-view';
+import { SettingsView, type AccountMode } from '@/features/settings/settings-view';
 import { deviceTimeZone } from '@/lib/device';
+import { signOutLocally } from '@/lib/supabase';
 
 function readSettingsScreen() {
   const profile = getProfile(db, LOCAL_USER_ID);
   if (!profile) return null;
-  const { demoMode, reduceMotion, notificationHintSeen } = getSettings(db);
-  const mode = demoMode ? ('demo' as const) : ('local' as const);
-  return { profile, reduceMotion, mode, notificationHintSeen };
+  const { demoMode, reduceMotion, notificationHintSeen, accountUserId, accountEmail } =
+    getSettings(db);
+  const mode: AccountMode = demoMode ? 'demo' : accountUserId ? 'account' : 'local';
+  return { profile, reduceMotion, mode, email: accountEmail, notificationHintSeen };
 }
 
 /** `modal/settings` (SCOPE.md section 5.3), opened from the gear on Stats. */
@@ -27,13 +29,14 @@ export default function Settings() {
   const { access, ask } = useNotificationAccess();
   // Gone for a moment after signing out, while the route guard moves to sign-in.
   if (!data) return null;
-  const { profile, reduceMotion, mode, notificationHintSeen } = data;
+  const { profile, reduceMotion, mode, email, notificationHintSeen } = data;
   return (
     <SettingsView
       hero={{ heroName: profile.heroName, timezone: profile.timezone }}
       deviceTimeZone={deviceTimeZone()}
       reduceMotion={reduceMotion}
       mode={mode}
+      email={email}
       version={Constants.expoConfig?.version ?? 'unknown'}
       notifications={{
         access,
@@ -48,7 +51,14 @@ export default function Settings() {
       }}
       onSaveHero={(fields) => updateProfile(db, LOCAL_USER_ID, fields)}
       onReduceMotion={(value) => updateSettings(db, { reduceMotion: value })}
-      onSignOut={() => confirmSignOut(mode, profile.heroName, () => resetLocalData(db))}
+      onSignOut={() =>
+        confirmSignOut(mode, profile.heroName, () => {
+          // The session goes first, so a crash in between can't leave a signed-in empty phone.
+          void signOutLocally()
+            .catch((error: unknown) => console.warn('Clearing the session failed', error))
+            .then(() => resetLocalData(db));
+        })
+      }
       onClose={() => router.back()}
     />
   );

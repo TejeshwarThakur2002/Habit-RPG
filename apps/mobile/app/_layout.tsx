@@ -62,6 +62,7 @@ function GuardedStack() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Protected guard={area === 'sign-in'}>
           <Stack.Screen name="(auth)/sign-in" />
+          <Stack.Screen name="(auth)/verify" />
         </Stack.Protected>
         <Stack.Protected guard={area === 'onboarding'}>
           <Stack.Screen name="(auth)/onboarding" />

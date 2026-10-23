@@ -3,7 +3,7 @@ import { Alert } from 'react-native';
 import type { AccountMode } from './settings-view';
 
 /**
- * Signing out wipes the hero from the phone (there is no account to keep it until P3), so it
+ * Signing out wipes the hero from the phone (nothing is on the server until sync, P4), so it
  * always asks first and says exactly what goes.
  */
 export function confirmSignOut(mode: AccountMode, heroName: string, onConfirm: () => void): void {

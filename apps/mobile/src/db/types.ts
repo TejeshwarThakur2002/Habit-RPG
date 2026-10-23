@@ -8,7 +8,10 @@ import type * as schema from './schema';
  */
 export type AppDb = BaseSQLiteDatabase<'sync', unknown, typeof schema>;
 
-/** The local user's id before sign-in, and in demo mode. */
+/**
+ * The id the phone keys the player's rows by, signed in or not. The phone holds one player, and
+ * sync maps this id to the signed-in account (DECISIONS.md D33).
+ */
 export const LOCAL_USER_ID = 'local';
 
 /** What a faint at day close took, kept until the player has seen the "You fainted" modal. */
