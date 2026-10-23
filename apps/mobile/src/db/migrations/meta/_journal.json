@@ -29,6 +29,13 @@
       "when": 1792737788286,
       "tag": "0003_add_notification_hint_setting",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792743385158,
+      "tag": "0004_add_account_setting",
+      "breakpoints": true
     }
   ]
 }
