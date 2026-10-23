@@ -24,7 +24,7 @@ const config: ExpoConfig = {
     },
     predictiveBackGestureEnabled: false,
   },
-  plugins: ['expo-router'],
+  plugins: ['expo-router', 'expo-notifications', '@react-native-community/datetimepicker'],
   experiments: {
     typedRoutes: true,
   },
