@@ -259,3 +259,12 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **Bosses beaten** counts defeated boss weeks in parties the hero belongs to; the demo party's boss isn't beaten yet, so it shows 0.
 - **The sync card says "Saved on this phone"** until accounts and sync exist (P3 and P4): demo data never syncs, and a local hero's progress will once they sign in. The Retry / Sync now button arrives with sync.
 - **Not yet:** the gear button in the header opens Settings, which is its own PR. Until then the temporary "Reset and sign out" button stays at the bottom of this screen.
+
+## D27. Settings (2026-10-23)
+
+- **Builds the phone half of F10 at `modal/settings`** (SCOPE.md sections 5.3 and 5.8), a native modal like the habit sheet (D21), opened from a 44 × 44 gear button in the Stats header. The gear is a new `IconButton` and `GearIcon` in packages/ui (shown in the dev gallery), drawn as a 22 pt outline like the tab icons.
+- **Hero name and time zone** use onboarding's Zod rules (2 to 20 characters after cleaning; a real IANA zone). "Save changes" stays off until something valid changed, and a "Use this phone's zone" button appears when the phone's zone differs from the hero's. Renaming also renames the hero in the local party read-model, in the same transaction.
+- **A new time zone only moves "today" from now on.** Days already closed stay closed; the next day close uses the new zone. This matches the server, which reads the zone from the profile.
+- **Reduce motion** is System, On or Off, saved at once in `settings.reduce_motion`, which already feeds `ReduceMotionProvider` (D24). It is a device setting, so signing out keeps it.
+- **Sign out replaces the temporary "Reset and sign out" button on Stats** (D19, D26). Until accounts exist there is nothing to sign out of, and the hero lives only on the phone, so it asks first and says what goes: "Leave the demo" in the demo; "Sign out", which deletes the local hero, otherwise.
+- **Not yet:** Delete account needs the server's `delete-account` function, so it arrives with accounts in P3 (until then, signing out already removes everything from the phone). Notification permission status comes with reminders (F9). The privacy policy link waits for `docs/PRIVACY.md`. The outbox row for profile changes comes with sync in P4.

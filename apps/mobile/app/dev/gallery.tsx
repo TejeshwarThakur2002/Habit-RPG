@@ -1,6 +1,8 @@
 import {
   Button,
   Chip,
+  GearIcon,
+  IconButton,
   ReduceMotionProvider,
   ScreenHeader,
   StatBar,
@@ -75,6 +77,12 @@ export default function Gallery() {
           <Button label="Ghost" variant="ghost" />
           <Button label="Danger" variant="danger" />
           <Button label="Disabled" disabled />
+        </Section>
+
+        <Section title="IconButton">
+          <IconButton label="Settings" onPress={() => undefined}>
+            <GearIcon />
+          </IconButton>
         </Section>
 
         <Section title="SyncPill">

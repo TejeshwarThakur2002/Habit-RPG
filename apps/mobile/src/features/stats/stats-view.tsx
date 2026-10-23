@@ -1,6 +1,7 @@
 import {
-  Button,
+  GearIcon,
   Heatmap,
+  IconButton,
   ScreenHeader,
   borders,
   colors,
@@ -20,12 +21,11 @@ export interface StatsViewProps {
   stats: Stats;
   demo: boolean;
   onEditHabit: (habitId: string) => void;
-  /** Temporary until Settings exists: wipes local data and returns to sign-in. */
-  onReset: () => void;
+  onOpenSettings: () => void;
 }
 
 /** "Adventure Log" (SCOPE.md section 5.7). */
-export function StatsView({ stats, demo, onEditHabit, onReset }: StatsViewProps) {
+export function StatsView({ stats, demo, onEditHabit, onOpenSettings }: StatsViewProps) {
   const insets = useSafeAreaInsets();
   const month = stats.monthPercent === null ? '–' : `${stats.monthPercent}%`;
   return (
@@ -33,7 +33,14 @@ export function StatsView({ stats, demo, onEditHabit, onReset }: StatsViewProps)
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
     >
-      <ScreenHeader title="Adventure Log" />
+      <ScreenHeader
+        title="Adventure Log"
+        right={
+          <IconButton label="Settings" onPress={onOpenSettings}>
+            <GearIcon />
+          </IconButton>
+        }
+      />
       <View style={styles.tiles}>
         <Tile value={`${stats.streak}`} label="day streak" color={colors.orange} />
         <Tile value={month} label="this month" color={colors.teal} />
@@ -63,8 +70,6 @@ export function StatsView({ stats, demo, onEditHabit, onReset }: StatsViewProps)
             : 'Playing without an account. Your progress will sync once you sign in.'}
         </Text>
       </Card>
-
-      <Button label="Reset and sign out" variant="danger" onPress={onReset} />
     </ScrollView>
   );
 }
