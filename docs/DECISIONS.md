@@ -248,3 +248,14 @@ SCOPE.md section 3 gives the formulas; these are the choices where it does not s
 - **Stat tooltips:** tapping a stat chip shows how that stat grows and what it does, from the rules in section 3, in a panel under the chips (a screen reader reads it when it appears). Tapping the chip again hides it.
 - **Item icons:** six original 8 × 8 pixel-art icons in the sprite palette (`packages/sprites/src/items.ts`) and an `ItemIcon` renderer, 24 pt by default, greyed while locked. They replace the gallery's placeholder blocks, which were the last item carried into P2 from P1. Like every sprite they are original, so docs/ASSETS.md needs no new entry.
 - **Not yet:** the outbox row for purchases and equips comes with sync in P4, where the server checks the price again.
+
+## D26. Stats screen (2026-10-23)
+
+- **Builds F6 as SCOPE.md section 5.7 lays it out:** "Adventure Log", three tiles (day streak, this month's completion rate, bosses beaten), the 12-week heatmap card, "Quest completion" for the last 30 days, and the sync card. Every number comes from SQLite, so the screen works offline.
+- **The rules live in game-core** (`stats.ts`): `completionRate`, `monthStart`, `heatmapCounts` and `heatmapSummary`, pure like the rest, so the server can reuse them. Coverage stays at 100%.
+- **How a completion rate is counted:** scheduled quests completed divided by scheduled quests, from the start of the period to today. A day only counts for a quest that existed and wasn't archived or deleted yet. Today counts only the quests already done, so an unfinished morning doesn't pull the rate down. A quest with nothing scheduled in the period shows "–".
+- **"Quest completion" shows up to 5 quests:** all of them, best first, when there are 5 or fewer; with more, the top 3 and the bottom 2, so both what's going well and what needs attention are visible (section 5.7 says "the best and worst" without saying how many of each).
+- **The quest detail is a small pop-up** (the packages/ui `Modal`, like D23 and D24) with the last-30-day rate, the quest's own streak (game-core's `habitStreak`) and an "Edit quest" button that opens the habit sheet. A full habit detail screen isn't in the scope's route list, so this stays small.
+- **Bosses beaten** counts defeated boss weeks in parties the hero belongs to; the demo party's boss isn't beaten yet, so it shows 0.
+- **The sync card says "Saved on this phone"** until accounts and sync exist (P3 and P4): demo data never syncs, and a local hero's progress will once they sign in. The Retry / Sync now button arrives with sync.
+- **Not yet:** the gear button in the header opens Settings, which is its own PR. Until then the temporary "Reset and sign out" button stays at the bottom of this screen.
