@@ -82,3 +82,28 @@ export const profileChange = (heroName: string, timezone = 'America/Toronto') =>
   client_updated_at: AT,
   data: { hero_name: heroName, class: 'mage', timezone },
 });
+
+/** A habit upsert from the phone; `at` is its client_updated_at. */
+export const habitChange = (
+  id: string,
+  at: string,
+  data: Partial<Record<string, unknown>> = {},
+) => ({
+  table: 'habits',
+  op: 'upsert',
+  id,
+  client_updated_at: at,
+  data: {
+    name: 'Read',
+    type: 'daily',
+    difficulty: 'easy',
+    category: 'mind',
+    weekdays: 127,
+    reminder_time: null,
+    sort_order: 0,
+    created_date: '2026-10-20',
+    archived_at: null,
+    deleted_at: null,
+    ...data,
+  },
+});
