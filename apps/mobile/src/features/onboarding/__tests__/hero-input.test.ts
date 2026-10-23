@@ -1,19 +1,7 @@
-import { cleanText } from '@/lib/text';
-
-import {
-  fieldError,
-  heroInputSchema,
-  heroNameSchema,
-  isValidTimeZone,
-  timeZoneSchema,
-} from '../hero-input';
+import { fieldError, heroInputSchema, heroNameSchema, timeZoneSchema } from '../hero-input';
 
 describe('hero name', () => {
-  it('strips control and invisible characters and tidies spaces', () => {
-    expect(cleanText('  Sir\u0007  Commit\u200B ')).toBe('Sir Commit');
-    expect(cleanText('Ada\nLovelace')).toBe('Ada Lovelace');
-  });
-
+  // cleanText itself is tested in packages/shared.
   it('accepts 2 to 20 characters after cleaning', () => {
     expect(fieldError(heroNameSchema, 'Al')).toBeNull();
     expect(fieldError(heroNameSchema, 'A'.repeat(20))).toBeNull();
@@ -23,11 +11,7 @@ describe('hero name', () => {
 });
 
 describe('time zone', () => {
-  it('accepts IANA zone names and rejects anything else', () => {
-    expect(isValidTimeZone('America/Toronto')).toBe(true);
-    expect(isValidTimeZone('Pacific/Auckland')).toBe(true);
-    expect(isValidTimeZone('Mars/Olympus')).toBe(false);
-    expect(isValidTimeZone('')).toBe(false);
+  it('accepts IANA zone names with spaces around them and rejects anything else', () => {
     expect(fieldError(timeZoneSchema, ' Asia/Kolkata ')).toBeNull();
     expect(fieldError(timeZoneSchema, 'Toronto')).toBe('Enter a time zone like America/Toronto');
   });

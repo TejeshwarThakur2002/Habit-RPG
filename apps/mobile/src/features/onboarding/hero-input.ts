@@ -1,17 +1,8 @@
 import { z } from 'zod';
 
-import { cleanText } from '@/lib/text';
+import { cleanText, isValidTimeZone } from '@habit-rpg/shared';
 
 // SCOPE.md F1: hero name 2 to 20 characters, after cleanText (section 9.6).
-
-export function isValidTimeZone(zone: string): boolean {
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone: zone });
-    return zone.length > 0;
-  } catch {
-    return false;
-  }
-}
 
 export const heroNameSchema = z
   .string()
