@@ -2,8 +2,8 @@
 // days instead of repeating ones, so a quest already done today gets no reminder and times
 // follow the hero's time zone rather than the phone's (DECISIONS.md D28).
 
-import { addDays, isScheduledOn, localDateTime, type LocalDate, type Schedule } from './dates';
-import type { IsDone } from './stats';
+import { addDays, isScheduledOn, localDateTime, type LocalDate, type Schedule } from './dates.ts';
+import type { IsDone } from './stats.ts';
 
 /** How far ahead reminders are booked; the app refreshes them on every change and open. */
 export const REMINDER_DAYS = 7;

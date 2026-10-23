@@ -3,8 +3,8 @@ import {
   STREAK_BONUS_MAX_DAYS,
   STREAK_BONUS_PER_DAY,
   type BaseValues,
-} from './constants';
-import { divRound, hash32 } from './math';
+} from './constants.ts';
+import { divRound, hash32 } from './math.ts';
 
 export interface RewardInput {
   base: BaseValues;

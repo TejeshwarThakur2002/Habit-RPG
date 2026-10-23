@@ -9,7 +9,7 @@ import {
   newHero,
   xpToNext,
   type Hero,
-} from './character';
+} from './character.ts';
 
 const hero = (overrides: Partial<Hero> = {}): Hero => ({
   level: 7,

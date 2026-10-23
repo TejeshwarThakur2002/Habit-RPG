@@ -2,8 +2,8 @@
 // habits and completions, applies the result with applyHpChange and closeDayStreak, and writes
 // the day_closures row that makes the job idempotent.
 
-import { baseValues, type Difficulty } from './constants';
-import { isScheduledOn, type LocalDate, type Schedule } from './dates';
+import { baseValues, type Difficulty } from './constants.ts';
+import { isScheduledOn, type LocalDate, type Schedule } from './dates.ts';
 
 export interface ClosingHabit extends Schedule {
   id: string;

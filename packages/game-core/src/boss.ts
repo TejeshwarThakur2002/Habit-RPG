@@ -1,6 +1,6 @@
 // Parties and weekly bosses (SCOPE.md sections 3 and 9.2).
 
-import { addDays, localDate, weekday, type LocalDate } from './dates';
+import { addDays, localDate, weekday, type LocalDate } from './dates.ts';
 
 /** Rotates weekly in this order; "Monday" is the final boss, then the roster starts again. */
 export const BOSS_ROSTER = [

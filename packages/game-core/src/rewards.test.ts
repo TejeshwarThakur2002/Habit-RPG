@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { BAD_HABIT_VALUES, DIFFICULTY_VALUES, baseValues } from './constants';
-import { divRound, hash32 } from './math';
-import { computeReward, isCrit, streakPercent } from './rewards';
+import { BAD_HABIT_VALUES, DIFFICULTY_VALUES, baseValues } from './constants.ts';
+import { divRound, hash32 } from './math.ts';
+import { computeReward, isCrit, streakPercent } from './rewards.ts';
 
 // Crit rolls (hash32(id) % 100) for fixed ids, so tests don't depend on random UUIDs.
 const ROLL_8 = '9b1d2e3f-4a5b-4c6d-8e7f-1a2b3c4d5e6f';

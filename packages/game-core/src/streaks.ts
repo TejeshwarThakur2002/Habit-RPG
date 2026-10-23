@@ -1,6 +1,6 @@
 // Streaks (SCOPE.md section 3, "Streaks").
 
-import { addDays, isScheduledOn, type LocalDate, type Schedule } from './dates';
+import { addDays, isScheduledOn, type LocalDate, type Schedule } from './dates.ts';
 
 export interface Streaks {
   current: number;

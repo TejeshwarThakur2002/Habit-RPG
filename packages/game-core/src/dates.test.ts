@@ -10,7 +10,7 @@ import {
   localDate,
   localDateTime,
   weekday,
-} from './dates';
+} from './dates.ts';
 
 const LA = 'America/Los_Angeles';
 const AKL = 'Pacific/Auckland';

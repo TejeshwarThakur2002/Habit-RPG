@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { closeDay, isActiveOn, voidedPenalty, type ClosingHabit } from './day-close';
-import { closeDayStreak, habitStreak } from './streaks';
+import { closeDay, isActiveOn, voidedPenalty, type ClosingHabit } from './day-close.ts';
+import { closeDayStreak, habitStreak } from './streaks.ts';
 
 const habit = (overrides: Partial<ClosingHabit> & { id: string }): ClosingHabit => ({
   type: 'daily',

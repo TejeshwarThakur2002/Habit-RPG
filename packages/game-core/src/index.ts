@@ -1,13 +1,13 @@
 // Pure game rules (SCOPE.md section 3), shared by the app and the Edge Functions.
 // No runtime dependencies, no clock and no device time zone: callers pass everything in.
-export * from './boss';
-export * from './constants';
-export * from './character';
-export * from './dates';
-export * from './day-close';
-export * from './gear';
-export { clamp, divRound, hash32 } from './math';
-export * from './reminders';
-export * from './rewards';
-export * from './stats';
-export * from './streaks';
+export * from './boss.ts';
+export * from './constants.ts';
+export * from './character.ts';
+export * from './dates.ts';
+export * from './day-close.ts';
+export * from './gear.ts';
+export { clamp, divRound, hash32 } from './math.ts';
+export * from './reminders.ts';
+export * from './rewards.ts';
+export * from './stats.ts';
+export * from './streaks.ts';

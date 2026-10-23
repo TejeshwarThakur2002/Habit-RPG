@@ -8,7 +8,7 @@ import {
   normalisePartyCode,
   undoBossDamage,
   weekStart,
-} from './boss';
+} from './boss.ts';
 import {
   GEAR,
   canBuy,
@@ -19,7 +19,7 @@ import {
   unequip,
   xpBonusFor,
   type GearId,
-} from './gear';
+} from './gear.ts';
 
 describe('gear catalog', () => {
   it('has the six items from the scope with one item per slot', () => {
