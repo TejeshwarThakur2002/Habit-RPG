@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 
 import { db } from '@/db/client';
 import { getProfile } from '@/db/queries/hero';
-import { resetLocalData } from '@/db/queries/local-data';
 import { getSettings } from '@/db/queries/settings';
 import { getStats } from '@/db/queries/stats';
 import { LOCAL_USER_ID } from '@/db/types';
@@ -25,7 +24,7 @@ export default function Stats() {
       stats={stats}
       demo={demo}
       onEditHabit={(id) => router.push({ pathname: '/modal/habit/[id]', params: { id } })}
-      onReset={() => resetLocalData(db)}
+      onOpenSettings={() => router.push('/modal/settings')}
     />
   );
 }

@@ -52,7 +52,7 @@ export default function RootLayout() {
 /** Only the routes for the current area are reachable (SCOPE.md section 5.3, route guards). */
 function GuardedStack() {
   const area = useAppArea();
-  // The in-app Reduce Motion choice ("system" until Settings exists) reaches every animation.
+  // The Reduce Motion choice from Settings reaches every animation.
   const reduceMotion = useDbQuery(() => getSettings(db).reduceMotion);
   return (
     <ReduceMotionProvider value={reduceMotion}>
@@ -66,6 +66,7 @@ function GuardedStack() {
         <Stack.Protected guard={area === 'tabs'}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="modal/habit/[id]" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="modal/settings" options={{ presentation: 'modal' }} />
         </Stack.Protected>
         <Stack.Protected guard={__DEV__}>
           <Stack.Screen name="dev/gallery" />

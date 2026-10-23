@@ -19,7 +19,7 @@ const stats: Stats = {
 };
 
 async function show(demo = false) {
-  const props = { stats, demo, onEditHabit: jest.fn(), onReset: jest.fn() };
+  const props = { stats, demo, onEditHabit: jest.fn(), onOpenSettings: jest.fn() };
   await render(<StatsView {...props} />);
   return props;
 }
@@ -51,6 +51,12 @@ describe('StatsView', () => {
     expect(screen.getByText('Current streak: 12 days')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Edit quest' }));
     expect(onEditHabit).toHaveBeenCalledWith('water');
+  });
+
+  it('opens Settings from the gear in the header', async () => {
+    const { onOpenSettings } = await show();
+    await fireEvent.press(screen.getByRole('button', { name: 'Settings' }));
+    expect(onOpenSettings).toHaveBeenCalledTimes(1);
   });
 
   it('shows a dash for a quest with nothing scheduled yet', async () => {
