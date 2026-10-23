@@ -2,6 +2,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 
 import { NEW_HABIT } from '../habit-form';
 import { HabitSheetView, type HabitSheetViewProps } from '../habit-sheet-view';
+import type { NotificationAccess } from '@/lib/notifications';
+
+let access: NotificationAccess = 'granted';
+beforeEach(() => {
+  access = 'granted';
+});
 
 async function open(overrides: Partial<HabitSheetViewProps> = {}) {
   const props = {
@@ -11,6 +17,10 @@ async function open(overrides: Partial<HabitSheetViewProps> = {}) {
     onArchive: jest.fn(),
     onDelete: jest.fn(),
     onCancel: jest.fn(),
+    permission: {
+      get: jest.fn(() => Promise.resolve(access)),
+      ask: jest.fn(() => Promise.resolve(access)),
+    },
     ...overrides,
   };
   await render(<HabitSheetView {...props} />);
@@ -32,8 +42,28 @@ describe('HabitSheetView', () => {
         difficulty: 'hard',
         category: 'body',
         weekdays: 127,
+        reminderTime: null,
       }),
     );
+  });
+
+  it('asks for notifications when a reminder is turned on and saves its time', async () => {
+    const { onSave, permission } = await open();
+    await fireEvent.changeText(screen.getByLabelText('Name'), 'Drink water');
+    await fireEvent(screen.getByLabelText('Remind me'), 'valueChange', true);
+    expect(permission.ask).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText(/^Reminder time, /)).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Add quest' }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ reminderTime: '20:00' })),
+    );
+  });
+
+  it('says when notifications are off, and keeps the reminder', async () => {
+    access = 'denied';
+    await open({ initial: { ...NEW_HABIT, name: 'Swim', reminderTime: '07:30' } });
+    expect(await screen.findByText(/Notifications are off for Habit RPG/)).toBeOnTheScreen();
   });
 
   it('shows the rewards and penalty for the chosen difficulty as you pick', async () => {

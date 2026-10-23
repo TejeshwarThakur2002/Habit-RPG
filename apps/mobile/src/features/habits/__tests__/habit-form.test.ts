@@ -11,7 +11,15 @@ describe('habitFormSchema', () => {
       difficulty: 'medium',
       category: 'mind',
       weekdays: 127,
+      reminderTime: null,
     });
+  });
+
+  it('keeps a valid reminder time and refuses a broken one', () => {
+    expect(parse({ name: 'Swim', reminderTime: '07:30' }).data?.reminderTime).toBe('07:30');
+    expect(parse({ name: 'Swim', reminderTime: '7:30' }).error?.issues[0]?.message).toBe(
+      'Pick a reminder time',
+    );
   });
 
   it('requires a name of at most 60 characters', () => {

@@ -9,6 +9,7 @@ import type { HabitFields } from '@/db/queries/habits';
 
 import { habitFormSchema, type HabitFormValues } from './habit-form';
 import { CategoryPicker, WeekdayPicker } from './pickers';
+import { ReminderPicker, type NotificationPermission } from './reminder-picker';
 
 export interface HabitSheetViewProps {
   initial: HabitFormValues;
@@ -18,6 +19,7 @@ export interface HabitSheetViewProps {
   onArchive?: () => void;
   onDelete?: () => void;
   onCancel: () => void;
+  permission: NotificationPermission;
 }
 
 const TYPES = [
@@ -118,6 +120,20 @@ export function HabitSheetView(props: HabitSheetViewProps) {
           control={control}
           name="category"
           render={({ field }) => <CategoryPicker value={field.value} onChange={field.onChange} />}
+        />
+      </Field>
+
+      <Field label="Reminder">
+        <Controller
+          control={control}
+          name="reminderTime"
+          render={({ field }) => (
+            <ReminderPicker
+              value={field.value}
+              onChange={field.onChange}
+              permission={props.permission}
+            />
+          )}
         />
       </Field>
 
