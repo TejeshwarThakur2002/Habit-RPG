@@ -1,15 +1,31 @@
-import { Button } from '@habit-rpg/ui';
+import { localDate } from '@habit-rpg/game-core';
+import { router } from 'expo-router';
 
-import { TabPlaceholder } from '@/components/tab-placeholder';
 import { db } from '@/db/client';
+import { getProfile } from '@/db/queries/hero';
 import { resetLocalData } from '@/db/queries/local-data';
+import { getSettings } from '@/db/queries/settings';
+import { getStats } from '@/db/queries/stats';
+import { LOCAL_USER_ID } from '@/db/types';
+import { useDbQuery } from '@/db/use-db-query';
+import { StatsView } from '@/features/stats/stats-view';
+
+function readStats() {
+  const profile = getProfile(db, LOCAL_USER_ID);
+  if (!profile) return null;
+  return getStats(db, LOCAL_USER_ID, localDate(Date.now(), profile.timezone));
+}
 
 export default function Stats() {
+  const stats = useDbQuery(readStats);
+  const demo = useDbQuery(() => getSettings(db).demoMode);
+  if (!stats) return null;
   return (
-    <TabPlaceholder title="Adventure Log" note="Your stats arrive in a Phase 2 update.">
-      {/* Settings (with Sign out) comes later in Phase 2; until then this wipes local data and
-          returns to sign-in, for the demo or a local hero alike. */}
-      <Button label="Reset and sign out" variant="danger" onPress={() => resetLocalData(db)} />
-    </TabPlaceholder>
+    <StatsView
+      stats={stats}
+      demo={demo}
+      onEditHabit={(id) => router.push({ pathname: '/modal/habit/[id]', params: { id } })}
+      onReset={() => resetLocalData(db)}
+    />
   );
 }
