@@ -6,8 +6,12 @@ import postgres from 'postgres';
 const env = (name: string) => Deno.env.get(name) ?? '';
 
 export const API_URL = env('API_URL');
-/** Integration tests are skipped when the local stack isn't running. */
+/** Integration tests are skipped when the local stack isn't running, except in CI. */
 export const NO_STACK = API_URL === '';
+// GitHub Actions sets CI: there, a missing stack is a broken setup, not a reason to skip.
+if (NO_STACK && Deno.env.get('CI')) {
+  throw new Error('The local Supabase stack is not reachable; integration tests cannot run');
+}
 
 const SERVICE_KEY = env('SERVICE_ROLE_KEY');
 const ANON_KEY = env('ANON_KEY');
