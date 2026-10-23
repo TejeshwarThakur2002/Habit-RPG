@@ -3,7 +3,7 @@
 export type AppArea = 'sign-in' | 'onboarding' | 'tabs';
 
 export interface SessionState {
-  /** A Supabase session exists (P3); always false until sign-in is built. */
+  /** Signed in with email (P3, D33). */
   signedIn: boolean;
   demoMode: boolean;
   /** Chose "Start without an account" on sign-in (DECISIONS.md D19). */

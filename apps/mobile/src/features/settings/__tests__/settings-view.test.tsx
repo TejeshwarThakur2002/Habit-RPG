@@ -8,6 +8,7 @@ async function setup(mode: AccountMode = 'local', deviceTimeZone = 'America/Toro
     deviceTimeZone,
     reduceMotion: 'system' as const,
     mode,
+    email: mode === 'account' ? 'ada@example.com' : null,
     version: '0.0.1',
     notifications: {
       access: 'granted' as const,
@@ -81,6 +82,16 @@ describe('SettingsView', () => {
   it('warns a local hero that signing out deletes them', async () => {
     const { onSignOut } = await setup('local');
     expect(screen.getByText(/Signing out deletes it/)).toBeOnTheScreen();
+    await fireEvent.press(button('Sign out'));
+    expect(onSignOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the signed-in email and that the hero is not synced yet', async () => {
+    const { onSignOut } = await setup('account');
+    expect(screen.getByText(/Signed in as ada@example.com/)).toBeOnTheScreen();
+    expect(
+      screen.getByText(/syncing it to your account comes in a later update/),
+    ).toBeOnTheScreen();
     await fireEvent.press(button('Sign out'));
     expect(onSignOut).toHaveBeenCalledTimes(1);
   });

@@ -35,3 +35,8 @@ jest.mock('@react-native-community/datetimepicker', () => {
   const Picker = (props) => createElement(View, { accessibilityLabel: props.accessibilityLabel });
   return { __esModule: true, default: Picker, DateTimePickerAndroid: { open: jest.fn() } };
 });
+
+// AsyncStorage holds the encrypted session (D33); its package ships this in-memory Jest mock.
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);

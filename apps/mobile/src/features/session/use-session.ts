@@ -9,7 +9,7 @@ import { decideArea, type AppArea } from './route';
 export function readArea(database: AppDb): AppArea {
   const current = getSettings(database);
   return decideArea({
-    signedIn: false,
+    signedIn: current.accountUserId !== null,
     demoMode: current.demoMode,
     localOnly: current.localOnly,
     onboardingDone: current.onboardingDone,
