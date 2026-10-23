@@ -52,7 +52,13 @@ export function resetLocalData(db: AppDb): void {
  * hero yet, the route guard then opens onboarding.
  */
 export function recordSignIn(db: AppDb, account: { id: string; email: string }): void {
-  const flags = { accountUserId: account.id, accountEmail: account.email, demoMode: false };
+  // Linking a local hero (D34) turns "playing without an account" off but keeps every row.
+  const flags = {
+    accountUserId: account.id,
+    accountEmail: account.email,
+    demoMode: false,
+    localOnly: false,
+  };
   db.insert(t.settings)
     .values({ id: 1, ...flags })
     .onConflictDoUpdate({ target: t.settings.id, set: flags })

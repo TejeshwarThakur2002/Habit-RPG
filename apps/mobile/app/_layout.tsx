@@ -71,6 +71,7 @@ function GuardedStack() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="modal/habit/[id]" options={{ presentation: 'modal' }} />
           <Stack.Screen name="modal/settings" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="modal/link-account" options={{ presentation: 'modal' }} />
         </Stack.Protected>
         <Stack.Protected guard={__DEV__}>
           <Stack.Screen name="dev/gallery" />
