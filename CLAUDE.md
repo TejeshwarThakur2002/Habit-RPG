@@ -10,15 +10,17 @@ and licences: [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Current phase
 
-**P2 Local-only app is complete** once its close PR merges; **P3 Backend and auth** is next and
-needs the owner's go-ahead (restate its task list first). Tag `v0.1.0` only with the owner's OK.
-Still deferred: creating the hosted Supabase project in ca-central-1 (ask the owner first).
+**P3 Backend and auth is in progress** (approved by the owner; `v0.1.0` tagged at the end of P2).
+Done so far: game-core shared with Edge Functions (D31), the player tables with read-only RLS and
+pgTAP tests (D32), email-code sign-in (D33) and linking a local hero to an account (D34). Still
+to come: the `sync` function, `daily-tick`, `delete-account`, and the CI round trip. Still
+deferred: creating the hosted Supabase project in ca-central-1 (ask the owner first).
 
 P2 delivered the whole app on the phone with no backend (DECISIONS.md D17 to D30): SQLite with
 Drizzle, demo mode and "Start without an account", onboarding, Quests with complete and undo,
 the habit sheet, drag to reorder, day close and fainting, level-up and reward feedback, Hero and
 the gear shop, Stats, Settings, local reminders, and the Maestro flow (`pnpm e2e`). The app
-makes no network calls yet. Carried into P3: Delete account (needs the server) and the
+made no network calls. Carried into P3: Delete account (needs the server) and the
 `e2e.yml` CI workflow (needs a development build).
 
 On this Mac the Android emulator renders black with its default GPU mode; start it with
