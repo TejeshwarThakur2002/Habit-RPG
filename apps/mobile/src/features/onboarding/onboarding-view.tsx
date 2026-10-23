@@ -57,6 +57,7 @@ export function OnboardingView({ detectedTimeZone, onFinish }: OnboardingViewPro
         {step === 0 && (
           <TextField
             label="Hero name"
+            testID="hero-name"
             value={name}
             onChangeText={setName}
             onBlur={() => setNameTouched(true)}

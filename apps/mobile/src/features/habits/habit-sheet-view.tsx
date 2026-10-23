@@ -60,6 +60,7 @@ export function HabitSheetView(props: HabitSheetViewProps) {
         render={({ field }) => (
           <TextField
             label="Name"
+            testID="habit-name"
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
