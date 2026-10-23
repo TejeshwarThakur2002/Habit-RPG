@@ -18,7 +18,7 @@ import { eq } from 'drizzle-orm';
 
 import { characters, dayClosures, habits } from '../schema';
 import type { AppDb, FaintNotice } from '../types';
-import { getCharacter, getProfile, listEquippedGear } from './hero';
+import { getCharacter, getProfile, listEquippedGear, type Habit } from './hero';
 import { completedOn, heroStatsFor } from './quest-board';
 import { getSettings, updateSettings } from './settings';
 
@@ -102,17 +102,22 @@ export function closeDays(db: AppDb, userId: string, now: number): DayCloseSumma
 /** Everything about the hero's habits and gear that stays the same across the closed days. */
 function loadContext(db: AppDb, userId: string, tz: string) {
   const all = db.select().from(habits).where(eq(habits.userId, userId)).all();
-  const toDate = (iso: string | null) => (iso ? localDate(Date.parse(iso), tz) : null);
   return {
-    habits: all.map((h): ClosingHabit => ({
-      ...h,
-      archivedDate: toDate(h.archivedAt),
-      deletedDate: toDate(h.deletedAt),
-    })),
+    habits: toClosingHabits(all, tz),
     names: new Map(all.map((h) => [h.id, h.name])),
     maxHp: heroStatsFor(db, userId).maxHp,
     missesToBlock: gearBonuses(listEquippedGear(db, userId)).missesToBlock,
   };
+}
+
+/** Habits with their archive and delete times as local dates, as game-core expects. */
+export function toClosingHabits(rows: readonly Habit[], tz: string): ClosingHabit[] {
+  const toDate = (iso: string | null) => (iso ? localDate(Date.parse(iso), tz) : null);
+  return rows.map((h) => ({
+    ...h,
+    archivedDate: toDate(h.archivedAt),
+    deletedDate: toDate(h.deletedAt),
+  }));
 }
 
 /** Several faints before the player looks (e.g. a week away) are shown as one. */

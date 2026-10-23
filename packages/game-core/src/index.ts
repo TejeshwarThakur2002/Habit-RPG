@@ -8,4 +8,5 @@ export * from './day-close';
 export * from './gear';
 export { clamp, divRound, hash32 } from './math';
 export * from './rewards';
+export * from './stats';
 export * from './streaks';
