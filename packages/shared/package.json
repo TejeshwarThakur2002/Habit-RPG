@@ -12,5 +12,9 @@
   "devDependencies": {
     "typescript": "~6.0.3",
     "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "@habit-rpg/game-core": "workspace:*",
+    "zod": "^4.6.7"
   }
 }

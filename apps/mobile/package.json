@@ -16,6 +16,7 @@
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/pixelify-sans": "^0.4.2",
     "@habit-rpg/game-core": "workspace:*",
+    "@habit-rpg/shared": "workspace:*",
     "@habit-rpg/sprites": "workspace:*",
     "@habit-rpg/ui": "workspace:*",
     "@hookform/resolvers": "^5.9.2",

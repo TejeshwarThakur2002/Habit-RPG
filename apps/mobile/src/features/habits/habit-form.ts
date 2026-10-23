@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import type { Habit } from '@/db/queries/hero';
 import type { HabitFields } from '@/db/queries/habits';
-import { cleanText } from '@/lib/text';
+import { cleanText } from '@habit-rpg/shared';
 
 // SCOPE.md F2: name required, at most 60 characters; weekdays only for "Weekdays" habits.
 // Habit names appear in the party battle log, so they are cleaned like hero names (9.6).

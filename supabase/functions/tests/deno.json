@@ -1,5 +1,7 @@
 {
   "imports": {
-    "@std/assert": "jsr:@std/assert@^1.0.0"
+    "@std/assert": "jsr:@std/assert@^1.0.0",
+    "@habit-rpg/game-core": "../_shared/game-core/index.ts",
+    "zod": "npm:zod@4.6.7"
   }
 }
