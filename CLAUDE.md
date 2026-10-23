@@ -29,8 +29,8 @@ On this Mac the Android emulator renders black with its default GPU mode; start 
 - App: Expo SDK 58, Expo Router, React Native 0.88 (`apps/mobile`)
 - Local database (P2): `expo-sqlite` + Drizzle; the UI reads only from SQLite
 - Backend (P3): Supabase (Postgres, email-code Auth, Realtime, Deno Edge Functions, `pg_cron`)
-- Tests: Vitest in packages, Jest + React Native Testing Library in the app; pgTAP, `deno test`
-  and Maestro arrive in later phases
+- Tests: Vitest in packages, Jest + React Native Testing Library in the app, Maestro flows in
+  `apps/mobile/e2e` (local, on the iOS simulator); pgTAP and `deno test` arrive in P3
 - CI: GitHub Actions (`ci`, `gitleaks`, `supabase` jobs)
 
 ## Commands
@@ -43,6 +43,7 @@ pnpm lint                 # ESLint (incl. accessibility rules) + Prettier check
 pnpm format               # Prettier write
 pnpm typecheck            # tsc in every workspace
 pnpm test                 # Vitest + Jest in every workspace
+pnpm e2e                  # Maestro flows (needs the dev server on port 8095 and a booted simulator)
 pnpm supabase:start       # local Supabase stack (needs Docker, e.g. OrbStack)
 pnpm supabase:stop
 pnpm exec supabase db reset   # re-apply migrations and seed locally
