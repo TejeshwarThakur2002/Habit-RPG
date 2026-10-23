@@ -5,13 +5,11 @@ import {
   Heatmap,
   MemberRow,
   ShopItem,
-  colors,
-  radii,
   type ShopItemState,
 } from '@habit-rpg/ui';
-import { BossSprite } from '@habit-rpg/sprites';
+import type { GearId } from '@habit-rpg/game-core';
+import { BossSprite, ItemIcon } from '@habit-rpg/sprites';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
 
 import { GallerySection } from './gallery-section';
 
@@ -21,33 +19,43 @@ const HEAT_COUNTS = Array.from({ length: 84 }, (_, i) => {
   return ((i * 7 + (i % 5) * 3 + week) % 4) + (week > 6 ? 2 : 0);
 });
 
-const SHOP_STATES: { name: string; effect: string; price: number; state: ShopItemState }[] = [
+const SHOP_STATES: {
+  id: GearId;
+  name: string;
+  effect: string;
+  price: number;
+  state: ShopItemState;
+}[] = [
   {
+    id: 'oak-shield',
     name: 'Oak Shield',
     effect: '+2 CON · blocks 1 missed daily',
     price: 40,
     state: { kind: 'buyable' },
   },
   {
+    id: 'wizard-hat',
     name: 'Wizard Hat',
     effect: '+3 INT · 10% more XP from Mind habits',
     price: 75,
     state: { kind: 'expensive', goldNeeded: 12 },
   },
-  { name: 'Iron Sword', effect: '+3 STR', price: 60, state: { kind: 'owned' } },
-  { name: 'Leather Boots', effect: '+1 STR, +1 CON', price: 50, state: { kind: 'equipped' } },
+  { id: 'iron-sword', name: 'Iron Sword', effect: '+3 STR', price: 60, state: { kind: 'owned' } },
   {
+    id: 'leather-boots',
+    name: 'Leather Boots',
+    effect: '+1 STR, +1 CON',
+    price: 50,
+    state: { kind: 'equipped' },
+  },
+  {
+    id: 'dragon-cape',
     name: 'Dragon Cape',
     effect: '+2 STR, +2 LUCK',
     price: 200,
     state: { kind: 'locked', unlockLevel: 10 },
   },
 ];
-
-/** Placeholder shop icons until item icons are drawn (P2). */
-function Block({ color, size }: { color: string; size: number }) {
-  return <View style={[styles.block, { backgroundColor: color, width: size, height: size }]} />;
-}
 
 export function GameComponentSections() {
   const [done, setDone] = useState<Record<string, boolean>>({ water: true });
@@ -82,7 +90,11 @@ export function GameComponentSections() {
 
       <GallerySection title="ShopItem">
         {SHOP_STATES.map((item) => (
-          <ShopItem key={item.name} {...item} icon={<Block color={colors.purple} size={24} />} />
+          <ShopItem
+            key={item.id}
+            {...item}
+            icon={<ItemIcon id={item.id} grey={item.state.kind === 'locked'} />}
+          />
         ))}
       </GallerySection>
 
@@ -124,7 +136,3 @@ export function GameComponentSections() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  block: { borderRadius: radii.checkbox },
-});
