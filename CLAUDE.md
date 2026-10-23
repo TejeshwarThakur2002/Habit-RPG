@@ -10,15 +10,16 @@ and licences: [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Current phase
 
-**P1 Game rules, UI kit and sprites is complete** once its last PR merges; **P2 Local-only app**
-is next and needs the owner's go-ahead (restate its task list first). Still deferred from P0:
-creating the hosted Supabase project (ask the owner first).
+**P2 Local-only app is complete** once its close PR merges; **P3 Backend and auth** is next and
+needs the owner's go-ahead (restate its task list first). Tag `v0.1.0` only with the owner's OK.
+Still deferred: creating the hosted Supabase project in ca-central-1 (ask the owner first).
 
-P1 delivered `game-core` (every rule in SCOPE.md section 3, golden vectors, 100% coverage),
-`packages/ui` (tokens, fonts and every section 5.2 component in every state) and
-`packages/sprites` (3 classes, 6 gear overlays, 8 bosses). See them all on the dev-only
-`/dev/gallery` screen. Carried into P2: shop item icons (placeholders in the gallery) and a
-check that `Intl` time zones work on Hermes (DECISIONS.md D11).
+P2 delivered the whole app on the phone with no backend (DECISIONS.md D17 to D30): SQLite with
+Drizzle, demo mode and "Start without an account", onboarding, Quests with complete and undo,
+the habit sheet, drag to reorder, day close and fainting, level-up and reward feedback, Hero and
+the gear shop, Stats, Settings, local reminders, and the Maestro flow (`pnpm e2e`). The app
+makes no network calls yet. Carried into P3: Delete account (needs the server) and the
+`e2e.yml` CI workflow (needs a development build).
 
 On this Mac the Android emulator renders black with its default GPU mode; start it with
 `emulator -avd Medium_Phone_API_37.0 -gpu swiftshader_indirect`.
@@ -58,6 +59,7 @@ match the SDK. Run lint, typecheck and tests before calling any task done.
 apps/mobile/            Expo app
   app/                  Expo Router routes ((auth), (tabs), modal) — screens only
   src/                  app code, imported with the @/ alias (components, features, db, sync, lib, stores)
+  e2e/                  Maestro flows (`pnpm e2e`); helpers in e2e/subflows
   app.config.ts         app config (bundle id com.tejeshwar.habitrpg)
 packages/
   game-core/            pure game rules, no dependencies, used by app and server
