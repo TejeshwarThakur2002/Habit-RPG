@@ -1,0 +1,29 @@
+# Brings the app to onboarding step 1 with no hero, whatever an earlier run left behind:
+# signs out of any hero, then starts a local one. A run stopped mid-onboarding is already there.
+appId: host.exp.Exponent
+---
+- runFlow:
+    when:
+      visible: 'Quests tab'
+    commands:
+      - tapOn: 'Stats tab'
+      # Stats keeps its scroll position, so the header gear may be off screen.
+      - scrollUntilVisible:
+          element: 'Settings'
+          direction: UP
+      - tapOn: 'Settings'
+      - scrollUntilVisible:
+          element: 'Leave the demo|Sign out'
+      - tapOn: 'Leave the demo|Sign out'
+      # The alert's action shares its label with the button behind it; it sits right of Cancel.
+      - tapOn:
+          text: 'Leave|Sign out'
+          rightOf: 'Cancel'
+- extendedWaitUntil:
+    visible: 'Start without an account|Step 1 of 3'
+    timeout: 15000
+- runFlow:
+    when:
+      visible: 'Start without an account'
+    commands:
+      - tapOn: 'Start without an account'
