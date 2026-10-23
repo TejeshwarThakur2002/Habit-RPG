@@ -20,21 +20,22 @@ insert into public.characters (user_id) values ('00000000-0000-0000-0000-0000000
 insert into public.habits (id, user_id, name, type, difficulty, created_date, client_updated_at)
   values ('10000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'Read', 'daily', 'easy', '2026-10-20', now());
 
-select isnt((select server_seq from public.habits), null, 'inserting stamps server_seq');
+select isnt((select server_seq from public.habits where user_id = '00000000-0000-0000-0000-00000000000a'), null, 'inserting stamps server_seq');
 select ok(
-  (select server_seq from public.habits) > (select server_seq from public.profiles),
+  (select server_seq from public.habits where user_id = '00000000-0000-0000-0000-00000000000a') > (select server_seq from public.profiles where id = '00000000-0000-0000-0000-00000000000a'),
   'later writes get a higher server_seq'
 );
 
 -- Updates take a fresh number, so a client pulling "after my cursor" sees the change.
-create temporary table seq_before as select server_seq from public.habits;
-update public.habits set name = 'Read 20 pages';
+create temporary table seq_before as
+  select server_seq from public.habits where user_id = '00000000-0000-0000-0000-00000000000a';
+update public.habits set name = 'Read 20 pages' where user_id = '00000000-0000-0000-0000-00000000000a';
 select ok(
-  (select server_seq from public.habits) > (select server_seq from seq_before),
+  (select server_seq from public.habits where user_id = '00000000-0000-0000-0000-00000000000a') > (select server_seq from seq_before),
   'updating stamps a higher server_seq'
 );
-select is((select level from public.characters), 1, 'a new hero starts at level 1');
-select is((select hp from public.characters), 44, 'a new hero starts with 44 HP');
+select is((select level from public.characters where user_id = '00000000-0000-0000-0000-00000000000a'), 1, 'a new hero starts at level 1');
+select is((select hp from public.characters where user_id = '00000000-0000-0000-0000-00000000000a'), 44, 'a new hero starts with 44 HP');
 
 -- One active completion per habit per day; an undone one frees the day again.
 insert into public.completions (id, user_id, habit_id, local_date, completed_at, category, xp_awarded, gold_awarded, boss_damage)
@@ -62,13 +63,13 @@ select throws_ok(
 
 -- The checks from section 8.1.
 select throws_ok(
-  $$update public.profiles set hero_name = 'A'$$, '23514', null, 'hero names under 2 characters are refused'
+  $$update public.profiles set hero_name = 'A' where id = '00000000-0000-0000-0000-00000000000a'$$, '23514', null, 'hero names under 2 characters are refused'
 );
 select throws_ok(
-  $$update public.habits set type = 'monthly'$$, '23514', null, 'unknown habit types are refused'
+  $$update public.habits set type = 'monthly' where user_id = '00000000-0000-0000-0000-00000000000a'$$, '23514', null, 'unknown habit types are refused'
 );
 select throws_ok(
-  $$update public.characters set gold = -1$$, '23514', null, 'gold can''t go below 0'
+  $$update public.characters set gold = -1 where user_id = '00000000-0000-0000-0000-00000000000a'$$, '23514', null, 'gold can''t go below 0'
 );
 select throws_ok(
   $$insert into public.inventory (id, user_id, item_id, purchased_at) values
@@ -81,9 +82,11 @@ select throws_ok(
 reset role;
 delete from auth.users where id = '00000000-0000-0000-0000-00000000000a';
 select is(
-  (select (select count(*) from public.profiles) + (select count(*) from public.characters)
-        + (select count(*) from public.habits) + (select count(*) from public.completions)
-        + (select count(*) from public.character_events))::int,
+  (select (select count(*) from public.profiles where id = '00000000-0000-0000-0000-00000000000a')
+        + (select count(*) from public.characters where user_id = '00000000-0000-0000-0000-00000000000a')
+        + (select count(*) from public.habits where user_id = '00000000-0000-0000-0000-00000000000a')
+        + (select count(*) from public.completions where user_id = '00000000-0000-0000-0000-00000000000a')
+        + (select count(*) from public.character_events where user_id = '00000000-0000-0000-0000-00000000000a'))::int,
   0,
   'deleting the account removes all of the player''s rows'
 );

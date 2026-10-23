@@ -84,7 +84,25 @@ jobs:
           deno-version: 2.9.7
 
       - run: pnpm functions:check
+
+      # Served by the CLI rather than `supabase start`'s edge runtime: there the database URL's
+      # host (supabase_db_<project>) has an underscore that Deno's resolver refuses (D36).
+      # Ready once the gateway answers 401 for a call without a token.
+      - name: Serve Edge Functions
+        run: |
+          pnpm exec supabase functions serve > functions.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:54321/functions/v1/sync || true)
+            if [ "$code" = "401" ]; then exit 0; fi
+            sleep 2
+          done
+          cat functions.log
+          exit 1
+
       - run: pnpm functions:test
+
+      - if: failure()
+        run: cat functions.log || true
 
       # pgTAP tests in supabase/tests: the schema rules and Row Level Security (section 9.6).
       - run: pnpm exec supabase test db

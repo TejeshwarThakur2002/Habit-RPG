@@ -55,7 +55,8 @@ pnpm supabase:stop
 pnpm exec supabase db reset   # re-apply migrations and seed locally
 pnpm db:test              # pgTAP database tests (schema rules and RLS) against the local stack
 pnpm functions:check      # functions copy is current, deno lint, deno check
-pnpm functions:test       # Deno tests for Edge Functions
+pnpm functions:test       # Deno tests for Edge Functions; the sync tests call the running
+                          # function, so start `pnpm exec supabase functions serve` first
 ```
 
 Add Expo packages to the app with `npx expo install <pkg>` (run inside `apps/mobile`) so versions
