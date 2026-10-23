@@ -20,7 +20,8 @@
     "prepare": "husky",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
-    "supabase:status": "supabase status"
+    "supabase:status": "supabase status",
+    "db:test": "supabase test db"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",

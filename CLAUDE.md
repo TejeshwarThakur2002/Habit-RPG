@@ -31,7 +31,8 @@ On this Mac the Android emulator renders black with its default GPU mode; start 
 - Local database (P2): `expo-sqlite` + Drizzle; the UI reads only from SQLite
 - Backend (P3): Supabase (Postgres, email-code Auth, Realtime, Deno Edge Functions, `pg_cron`)
 - Tests: Vitest in packages, Jest + React Native Testing Library in the app, Maestro flows in
-  `apps/mobile/e2e` (local, on the iOS simulator); pgTAP and `deno test` arrive in P3
+  `apps/mobile/e2e` (local, on the iOS simulator), pgTAP in `supabase/tests`, `deno test` in
+  `supabase/functions/tests`
 - CI: GitHub Actions (`ci`, `gitleaks`, `supabase` jobs)
 
 ## Commands
@@ -48,6 +49,9 @@ pnpm e2e                  # Maestro flows (needs the dev server on port 8095 and
 pnpm supabase:start       # local Supabase stack (needs Docker, e.g. OrbStack)
 pnpm supabase:stop
 pnpm exec supabase db reset   # re-apply migrations and seed locally
+pnpm db:test              # pgTAP database tests (schema rules and RLS) against the local stack
+pnpm functions:check      # functions copy is current, deno lint, deno check
+pnpm functions:test       # Deno tests for Edge Functions
 ```
 
 Add Expo packages to the app with `npx expo install <pkg>` (run inside `apps/mobile`) so versions
@@ -66,7 +70,7 @@ packages/
   shared/               Zod schemas and types for sync and party payloads
   ui/                   design tokens (tokens.ts) and shared components
   sprites/              pixel-art matrices (art.ts), palette and HeroSprite/BossSprite
-supabase/               config.toml, seed.sql; migrations/, functions/, tests/ arrive in P3
+supabase/               config.toml, seed.sql, migrations/, tests/ (pgTAP), functions/ (_shared is generated)
 docs/                   SCOPE, DECISIONS, ASSETS (PRIVACY, ARCHITECTURE, DEMO later)
 .github/workflows/      ci.yml
 ```
