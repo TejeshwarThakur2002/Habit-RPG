@@ -1,14 +1,18 @@
-// Pushing (SCOPE.md section 8.3). This first version applies the profile, which also creates
-// the server hero on the first sync; habits, completions and gear follow (D35, PRs C and D).
+// Pushing (SCOPE.md section 8.3), one change at a time in the order the phone made them. The
+// profile also creates the server hero on the first sync. Completions and gear follow (D35).
 
 import type { TransactionSql } from 'postgres';
 
 import { newHero } from '../_shared/game-core/index.ts';
-import type { Change } from '../_shared/shared/index.ts';
+import type { Change, SyncResponse } from '../_shared/shared/index.ts';
+import { pushHabit } from './push-habits.ts';
 
 export interface PushResult {
   applied: string[];
+  rejected: SyncResponse['rejected'];
 }
+
+const SUPPORTED = new Set(['profiles', 'habits']);
 
 /** A request carrying a change this version can't apply yet is refused as a whole. */
 export class UnsupportedChangeError extends Error {
@@ -18,7 +22,7 @@ export class UnsupportedChangeError extends Error {
 }
 
 export function assertSupported(changes: readonly Change[]): void {
-  const other = changes.find((c) => c.table !== 'profiles');
+  const other = changes.find((c) => !SUPPORTED.has(c.table));
   if (other) throw new UnsupportedChangeError(other.table);
 }
 
@@ -52,12 +56,21 @@ export async function pushChanges(
   userId: string,
   changes: readonly Change[],
 ): Promise<PushResult> {
-  const applied: string[] = [];
+  const result: PushResult = { applied: [], rejected: [] };
   for (const change of changes) {
     if (change.table === 'profiles') {
       await applyProfile(sql, userId, change);
-      applied.push(change.id);
+      result.applied.push(change.id);
+      continue;
     }
+    if (change.table !== 'habits') continue;
+    // Habits belong to a profile: a phone always pushes its profile first.
+    const [profile] = await sql`select 1 from public.profiles where id = ${userId}`;
+    const outcome = profile
+      ? await pushHabit(sql, userId, change)
+      : ({ applied: false, reason: 'invalid' } as const);
+    if (outcome.applied) result.applied.push(change.id);
+    else result.rejected.push({ id: change.id, table: change.table, reason: outcome.reason });
   }
-  return { applied };
+  return result;
 }
