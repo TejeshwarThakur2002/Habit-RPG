@@ -23,6 +23,7 @@ const fields = (overrides: Partial<HabitFields> = {}): HabitFields => ({
   difficulty: 'medium',
   category: 'mind',
   weekdays: 127,
+  reminderTime: null,
   ...overrides,
 });
 

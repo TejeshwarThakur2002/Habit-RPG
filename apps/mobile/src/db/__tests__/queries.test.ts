@@ -24,6 +24,7 @@ describe('settings', () => {
       onboardingDone: false,
       demoMode: false,
       localOnly: false,
+      notificationHintSeen: false,
       pendingFaint: null,
     });
     expect(updateSettings(db, { reduceMotion: 'on' }).reduceMotion).toBe('on');
