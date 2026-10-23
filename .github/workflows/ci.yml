@@ -86,7 +86,8 @@ jobs:
       - run: pnpm functions:check
       - run: pnpm functions:test
 
-      # pgTAP (RLS) tests are added here in P3.
+      # pgTAP tests in supabase/tests: the schema rules and Row Level Security (section 9.6).
+      - run: pnpm exec supabase test db
 
       - if: always()
         run: pnpm exec supabase stop --no-backup
