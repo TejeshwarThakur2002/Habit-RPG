@@ -9,6 +9,13 @@ async function setup(mode: AccountMode = 'local', deviceTimeZone = 'America/Toro
     reduceMotion: 'system' as const,
     mode,
     version: '0.0.1',
+    notifications: {
+      access: 'granted' as const,
+      hintSeen: false,
+      onTurnOn: jest.fn(),
+      onOpenPhoneSettings: jest.fn(),
+      onDismissHint: jest.fn(),
+    },
     onSaveHero: jest.fn(),
     onReduceMotion: jest.fn(),
     onSignOut: jest.fn(),
@@ -82,6 +89,12 @@ describe('SettingsView', () => {
     const { onSignOut } = await setup('demo');
     await fireEvent.press(button('Leave the demo'));
     expect(onSignOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows that notifications are on', async () => {
+    await setup();
+    expect(screen.getByRole('header', { name: 'Notifications' })).toBeOnTheScreen();
+    expect(screen.getByText(/^On\. Quest reminders arrive/)).toBeOnTheScreen();
   });
 
   it('shows the version and closes with Done', async () => {

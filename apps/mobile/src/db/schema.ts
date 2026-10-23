@@ -201,6 +201,8 @@ export const settings = sqliteTable('settings', {
   demoMode: bool('demo_mode').notNull().default(false),
   /** Playing without an account: a real local hero, linked to an account in P3 (D19). */
   localOnly: bool('local_only').notNull().default(false),
+  /** The one-time Settings hint after notifications were refused was dismissed (F9). */
+  notificationHintSeen: bool('notification_hint_seen').notNull().default(false),
   /** JSON FaintNotice: a faint from day close the player hasn't seen yet (SCOPE.md F4). */
   pendingFaint: text('pending_faint', { mode: 'json' }).$type<FaintNotice>(),
 });

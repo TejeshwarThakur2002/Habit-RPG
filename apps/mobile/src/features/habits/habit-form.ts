@@ -1,4 +1,4 @@
-import { ALL_WEEKDAYS } from '@habit-rpg/game-core';
+import { ALL_WEEKDAYS, parseTime } from '@habit-rpg/game-core';
 import { z } from 'zod';
 
 import type { Habit } from '@/db/queries/hero';
@@ -17,6 +17,11 @@ export const habitFormSchema = z
     difficulty: z.enum(['easy', 'medium', 'hard']),
     category: z.enum(['body', 'mind', 'health', 'none']),
     weekdays: z.number().int().min(0).max(ALL_WEEKDAYS),
+    // F9: an optional 'HH:MM' reminder in the hero's time zone.
+    reminderTime: z
+      .string()
+      .refine((t) => parseTime(t) !== null, 'Pick a reminder time')
+      .nullable(),
   })
   .refine((v) => v.type !== 'weekdays' || v.weekdays > 0, {
     path: ['weekdays'],
@@ -33,6 +38,7 @@ export const NEW_HABIT: HabitFormValues = {
   difficulty: 'medium',
   category: 'none',
   weekdays: ALL_WEEKDAYS,
+  reminderTime: null,
 };
 
 export function formValuesFor(habit: Habit): HabitFormValues {
@@ -42,5 +48,6 @@ export function formValuesFor(habit: Habit): HabitFormValues {
     difficulty: habit.difficulty,
     category: habit.category,
     weekdays: habit.weekdays,
+    reminderTime: habit.reminderTime,
   };
 }

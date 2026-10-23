@@ -11,6 +11,7 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { HeroSection, type HeroFields } from './hero-section';
+import { NotificationsSection, type NotificationsSectionProps } from './notifications-section';
 
 /** Until accounts exist (P3) the player is either in the demo or playing without one (D19). */
 export type AccountMode = 'demo' | 'local';
@@ -21,6 +22,7 @@ export interface SettingsViewProps {
   reduceMotion: ReduceMotionSetting;
   mode: AccountMode;
   version: string;
+  notifications: NotificationsSectionProps;
   onSaveHero: (fields: HeroFields) => void;
   onReduceMotion: (value: ReduceMotionSetting) => void;
   onSignOut: () => void;
@@ -77,6 +79,10 @@ export function SettingsView(props: SettingsViewProps) {
           System follows your phone&apos;s setting. On turns off bouncing, confetti and floating
           rewards. Haptics stay on.
         </Text>
+      </Section>
+
+      <Section title="Notifications">
+        <NotificationsSection {...props.notifications} />
       </Section>
 
       <Section title="Account">

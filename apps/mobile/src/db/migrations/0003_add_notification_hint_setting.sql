@@ -1,0 +1,1 @@
+ALTER TABLE `settings` ADD `notification_hint_seen` integer DEFAULT false NOT NULL;

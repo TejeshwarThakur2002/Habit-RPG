@@ -27,3 +27,11 @@ jest.mock('expo-haptics', () => ({
   ImpactFeedbackStyle: { Light: 'light' },
   NotificationFeedbackType: { Success: 'success', Warning: 'warning' },
 }));
+
+// The native time picker can't render in Jest; a plain view keeps its label for queries.
+jest.mock('@react-native-community/datetimepicker', () => {
+  const { View } = require('react-native');
+  const { createElement } = require('react');
+  const Picker = (props) => createElement(View, { accessibilityLabel: props.accessibilityLabel });
+  return { __esModule: true, default: Picker, DateTimePickerAndroid: { open: jest.fn() } };
+});

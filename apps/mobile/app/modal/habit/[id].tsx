@@ -8,6 +8,18 @@ import { LOCAL_USER_ID } from '@/db/types';
 import { NEW_HABIT, formValuesFor } from '@/features/habits/habit-form';
 import { HabitSheetView } from '@/features/habits/habit-sheet-view';
 import { newId } from '@/lib/device';
+import { refreshReminders } from '@/features/reminders/use-reminders';
+import { askForNotifications, getNotificationAccess } from '@/lib/notifications';
+
+const PERMISSION = {
+  get: getNotificationAccess,
+  ask: async () => {
+    const access = await askForNotifications();
+    // Allowing changes no data, so book now rather than at the next change or open.
+    if (access === 'granted') refreshReminders();
+    return access;
+  },
+};
 
 /** `modal/habit/new` adds a quest; `modal/habit/<id>` edits one (SCOPE.md section 5.3). */
 export default function HabitSheet() {
@@ -27,6 +39,7 @@ export default function HabitSheet() {
       editing={habit !== undefined}
       initial={habit ? formValuesFor(habit) : NEW_HABIT}
       onCancel={close}
+      permission={PERMISSION}
       onSave={(fields) => {
         const now = Date.now();
         if (habit) updateHabit(db, LOCAL_USER_ID, habit.id, now, fields);

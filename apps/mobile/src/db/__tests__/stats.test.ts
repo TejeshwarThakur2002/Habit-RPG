@@ -25,6 +25,7 @@ const fields = (name: string): HabitFields => ({
   difficulty: 'medium',
   category: 'mind',
   weekdays: 127,
+  reminderTime: null,
 });
 
 function complete(habitId: string, date: string) {

@@ -16,6 +16,8 @@ export interface HabitFields {
   category: Category;
   /** Monday = 1 ... Sunday = 64; all days (127) for daily habits. */
   weekdays: number;
+  /** 'HH:MM' in the hero's time zone, or null for no reminder (F9). */
+  reminderTime: string | null;
 }
 
 export function getHabit(db: AppDb, userId: string, habitId: string): Habit | undefined {

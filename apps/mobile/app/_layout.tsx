@@ -16,6 +16,7 @@ import { db } from '@/db/client';
 import { DatabaseGate } from '@/db/database-gate';
 import { getSettings } from '@/db/queries/settings';
 import { useDbQuery } from '@/db/use-db-query';
+import { useReminders } from '@/features/reminders/use-reminders';
 import { useAppArea } from '@/features/session/use-session';
 
 // Keep the splash screen up until fonts load, so text never flashes in a fallback font.
@@ -52,6 +53,8 @@ export default function RootLayout() {
 /** Only the routes for the current area are reachable (SCOPE.md section 5.3, route guards). */
 function GuardedStack() {
   const area = useAppArea();
+  // At the root rather than in the tabs, so signing out clears booked reminders too.
+  useReminders();
   // The Reduce Motion choice from Settings reaches every animation.
   const reduceMotion = useDbQuery(() => getSettings(db).reduceMotion);
   return (
