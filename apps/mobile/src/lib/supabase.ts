@@ -1,11 +1,15 @@
+import type { SyncRequest } from '@habit-rpg/shared';
 import {
   AuthError,
   FunctionsFetchError,
+  FunctionsHttpError,
   createClient,
   type SupabaseClient,
 } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 import { z } from 'zod';
+
+import type { TransportResult } from '../sync/engine';
 
 import { largeSecureStore } from './large-secure-store';
 
@@ -148,4 +152,30 @@ export async function deleteAccount(): Promise<AuthResult<null>> {
   if (!supabase) return NOT_CONFIGURED;
   const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
   return error ? { ok: false, message: deleteErrorMessage(error) } : { ok: true, value: null };
+}
+
+/** How a failed `sync` call is retried: no answer and 5xx are, a 4xx isn't (D46). */
+export function syncFailure(error: unknown): Extract<TransportResult, { ok: false }> {
+  if (error instanceof FunctionsFetchError) {
+    return { ok: false, kind: 'offline', message: "Can't reach the server" };
+  }
+  const status = error instanceof FunctionsHttpError ? (error.context as Response).status : 0;
+  if (status >= 400 && status < 500) {
+    return {
+      ok: false,
+      kind: 'refused',
+      status,
+      message: `The server refused the sync (${status})`,
+    };
+  }
+  console.warn('sync failed', error);
+  return { ok: false, kind: 'server', status, message: 'The server had a problem' };
+}
+
+/** The sync engine's transport: one POST to the `sync` Edge Function with the session's token. */
+export async function sendSync(request: SyncRequest): Promise<TransportResult> {
+  const supabase = getSupabase();
+  if (!supabase) return { ok: false, kind: 'refused', message: "Sync isn't set up in this build" };
+  const { data, error } = await supabase.functions.invoke('sync', { body: request });
+  return error ? syncFailure(error) : { ok: true, body: data };
 }
