@@ -1,4 +1,9 @@
-import { AuthError, createClient, type SupabaseClient } from '@supabase/supabase-js';
+import {
+  AuthError,
+  FunctionsFetchError,
+  createClient,
+  type SupabaseClient,
+} from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 import { z } from 'zod';
 
@@ -123,4 +128,24 @@ export async function signOutLocally(): Promise<void> {
     console.warn('Signing out on the server failed; removing the session on this phone', error);
     await largeSecureStore.removeItem(SESSION_KEY);
   }
+}
+
+/** What the player sees when deleting the account fails; nothing is deleted on the phone. */
+export function deleteErrorMessage(error: unknown): string {
+  if (error instanceof FunctionsFetchError) {
+    return 'You need to be online to do this. Nothing was deleted.';
+  }
+  console.warn('Deleting the account failed', error);
+  return "Your account couldn't be deleted. Try again.";
+}
+
+/**
+ * Deletes the account and everything in it on the server (SCOPE.md F10), with the session's
+ * token saying whose. It needs the network; the caller then clears this phone.
+ */
+export async function deleteAccount(): Promise<AuthResult<null>> {
+  const supabase = getSupabase();
+  if (!supabase) return NOT_CONFIGURED;
+  const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+  return error ? { ok: false, message: deleteErrorMessage(error) } : { ok: true, value: null };
 }
