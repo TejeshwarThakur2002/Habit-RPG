@@ -6,6 +6,7 @@ import { withSupabase } from '@supabase/server';
 import postgres from 'postgres';
 
 import { syncRequestSchema } from '../_shared/shared/index.ts';
+import { SyncRefusedError } from './import.ts';
 import { runSync } from './sync.ts';
 
 /** 200 changes fit easily; anything bigger is refused before it is parsed (section 9.6). */
@@ -39,6 +40,7 @@ async function handle(req: Request, userId: string): Promise<Response> {
   try {
     return Response.json(await runSync(sql, userId, parsed.data));
   } catch (e: unknown) {
+    if (e instanceof SyncRefusedError) return error(e.status, e.code);
     // Logged without the payload, so no habit name reaches the server logs (section 9.6).
     console.error('sync failed', e instanceof Error ? e.message : e);
     return error(500, 'Sync failed');

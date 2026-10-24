@@ -70,6 +70,18 @@ describe('syncRequestSchema', () => {
     );
   });
 
+  it('takes an optional import of a linked hero, with its start time', () => {
+    const imported = { ...request([profile]), import: { started_at: AT, done: false } };
+    expect(syncRequestSchema.parse(imported).import).toEqual({ started_at: AT, done: false });
+    expect(syncRequestSchema.safeParse({ ...imported, import: { done: true } }).success).toBe(
+      false,
+    );
+    expect(
+      syncRequestSchema.safeParse({ ...imported, import: { started_at: AT, done: true, xp: 1 } })
+        .success,
+    ).toBe(false);
+  });
+
   it('refuses a negative cursor and a device id that is not a UUID', () => {
     expect(syncRequestSchema.safeParse({ ...request([]), cursor: -1 }).success).toBe(false);
     expect(syncRequestSchema.safeParse({ ...request([]), device_id: 'phone' }).success).toBe(false);

@@ -1,10 +1,12 @@
 // Pushing (SCOPE.md section 8.3), one change at a time in the order the phone made them. The
-// profile also creates the server hero on the first sync.
+// profile also creates the server hero on the first sync. An import replays history (D42).
 
 import type { TransactionSql } from 'postgres';
 
 import { newHero } from '../_shared/game-core/index.ts';
-import type { Change, SyncResponse } from '../_shared/shared/index.ts';
+import type { Change, SyncRequest, SyncResponse } from '../_shared/shared/index.ts';
+import { closeDays } from '../_server/close-days.ts';
+import { beginImport, changeTime } from './import.ts';
 import { pushCompletion } from './push-completions.ts';
 import { pushHabit, type Outcome } from './push-habits.ts';
 import { pushInventory } from './push-inventory.ts';
@@ -50,15 +52,49 @@ async function pushHabitChange(
   return await pushHabit(sql, userId, change);
 }
 
-async function pushChange(
+type Import = SyncRequest['import'];
+
+/**
+ * In an import, a change that moves the hero is applied as of when it happened on the phone:
+ * the days that had ended by then are closed first, and the completion window is measured
+ * from that time. Nothing may be dated after the server's now.
+ */
+async function pushTimed(
   sql: TransactionSql,
   userId: string,
   change: Change,
   now: Date,
+): Promise<Outcome | Date> {
+  const at = changeTime(change);
+  if (at === null) return now;
+  const when = new Date(at);
+  if (when > now) {
+    return {
+      applied: false,
+      reason: change.table === 'completions' ? 'date_out_of_range' : 'invalid',
+    };
+  }
+  await closeDays(sql, userId, when);
+  return when;
+}
+
+async function pushChange(
+  sql: TransactionSql,
+  userId: string,
+  change: Change,
+  serverNow: Date,
+  imported: Import,
 ): Promise<Outcome> {
+  let now = serverNow;
+  if (imported) {
+    const timed = await pushTimed(sql, userId, change, serverNow);
+    if (!(timed instanceof Date)) return timed;
+    now = timed;
+  }
   switch (change.table) {
     case 'profiles':
       await applyProfile(sql, userId, change);
+      if (imported) await beginImport(sql, userId, imported.started_at);
       return { applied: true };
     case 'habits':
       return await pushHabitChange(sql, userId, change);
@@ -74,10 +110,11 @@ export async function pushChanges(
   userId: string,
   changes: readonly Change[],
   now: Date,
+  imported?: Import,
 ): Promise<PushResult> {
   const result: PushResult = { applied: [], rejected: [] };
   for (const change of changes) {
-    const outcome = await pushChange(sql, userId, change, now);
+    const outcome = await pushChange(sql, userId, change, now, imported);
     if (outcome.applied) result.applied.push(change.id);
     else result.rejected.push({ id: change.id, table: change.table, reason: outcome.reason });
   }

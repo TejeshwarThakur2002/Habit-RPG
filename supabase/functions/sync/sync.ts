@@ -5,6 +5,7 @@ import type { Sql } from 'postgres';
 
 import type { SyncRequest, SyncResponse } from '../_shared/shared/index.ts';
 import { lockPlayer } from '../_server/lock.ts';
+import { checkImport, finishImport } from './import.ts';
 import { pullChanges } from './pull.ts';
 import { pushChanges } from './push.ts';
 import { characterOf } from './rows.ts';
@@ -18,7 +19,15 @@ export async function runSync(
     await lockPlayer(tx, userId);
     // The database's clock, the same one that stamps every row in this transaction.
     const [{ now }] = await tx`select now() as now`;
-    const { applied, rejected } = await pushChanges(tx, userId, request.changes, now as Date);
+    await checkImport(tx, userId, request, now as Date);
+    const { applied, rejected } = await pushChanges(
+      tx,
+      userId,
+      request.changes,
+      now as Date,
+      request.import,
+    );
+    if (request.import?.done) await finishImport(tx, userId, now as Date);
     const pulled = await pullChanges(tx, userId, request.cursor);
     const [hero] = await tx`
       select *, last_closed_date::text as last_closed_date
