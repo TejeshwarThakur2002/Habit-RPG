@@ -38,7 +38,7 @@ export default function Hero() {
     setToast({
       message: `Bought ${name}`,
       undo: () => {
-        undoPurchase(db, user, result.inventoryId);
+        undoPurchase(db, user, result.inventoryId, Date.now());
         setToast(null);
       },
     });
@@ -49,7 +49,7 @@ export default function Hero() {
       sheet={sheet}
       toast={toast}
       onBuy={buy}
-      onEquip={(itemId, on) => setEquipped(db, user, itemId, on)}
+      onEquip={(itemId, on) => setEquipped(db, user, itemId, on, Date.now())}
       onToastDone={() => setToast(null)}
     />
   );

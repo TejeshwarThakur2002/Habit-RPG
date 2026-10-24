@@ -51,9 +51,9 @@ describe('undoPurchase', () => {
     setHero({ gold: 100 });
     const result = buy('oak-shield');
     if (!result.ok) throw new Error('expected the purchase to succeed');
-    setEquipped(db, user, 'oak-shield', true);
+    setEquipped(db, user, 'oak-shield', true, NOW);
 
-    undoPurchase(db, user, result.inventoryId);
+    undoPurchase(db, user, result.inventoryId, NOW);
     expect(getCharacter(db, user)?.gold).toBe(100);
     expect(listInventory(db, user)).toEqual([]);
   });
@@ -66,28 +66,28 @@ describe('setEquipped', () => {
     buy('dragon-cape');
     const conBefore = heroStatsFor(db, user).CON;
 
-    setEquipped(db, user, 'oak-shield', true);
-    setEquipped(db, user, 'dragon-cape', true);
+    setEquipped(db, user, 'oak-shield', true, NOW);
+    setEquipped(db, user, 'dragon-cape', true, NOW);
     expect(heroStatsFor(db, user).CON).toBe(conBefore + 2);
     expect(listEquippedGear(db, user).sort()).toEqual(['dragon-cape', 'oak-shield']);
 
-    setEquipped(db, user, 'oak-shield', false);
+    setEquipped(db, user, 'oak-shield', false, NOW);
     expect(listEquippedGear(db, user)).toEqual(['dragon-cape']);
   });
 
   it('lowers HP to the new maximum when CON goes down', () => {
     setHero({ gold: 100 });
     buy('oak-shield');
-    setEquipped(db, user, 'oak-shield', true);
+    setEquipped(db, user, 'oak-shield', true, NOW);
     const { maxHp } = heroStatsFor(db, user);
     setHero({ hp: maxHp });
 
-    setEquipped(db, user, 'oak-shield', false);
+    setEquipped(db, user, 'oak-shield', false, NOW);
     expect(getCharacter(db, user)?.hp).toBe(maxHp - 2);
   });
 
   it('ignores items the hero does not own', () => {
-    setEquipped(db, user, 'iron-sword', true);
+    setEquipped(db, user, 'iron-sword', true, NOW);
     expect(listEquippedGear(db, user)).toEqual([]);
   });
 });

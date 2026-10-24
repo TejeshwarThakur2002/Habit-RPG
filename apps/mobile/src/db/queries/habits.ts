@@ -8,6 +8,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { habits } from '../schema';
 import type { AppDb } from '../types';
 import { getProfile, listActiveHabits, type Habit } from './hero';
+import { enqueue, habitChange } from './outbox';
 
 export interface HabitFields {
   name: string;
@@ -51,7 +52,28 @@ export function createHabit(
         clientUpdatedAt: new Date(input.now).toISOString(),
       })
       .run();
+    queueHabit(tx, input.userId, input.id, input.now);
   });
+}
+
+function queueHabit(tx: AppDb, userId: string, habitId: string, now: number): void {
+  const row = getHabit(tx, userId, habitId);
+  if (row) enqueue(tx, habitChange(row), now);
+}
+
+/** Changes a habit and queues it for sync, inside the caller's transaction. */
+function touchIn(
+  tx: AppDb,
+  userId: string,
+  habitId: string,
+  now: number,
+  set: Partial<typeof habits.$inferInsert>,
+): void {
+  tx.update(habits)
+    .set({ ...set, clientUpdatedAt: new Date(now).toISOString() })
+    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
+    .run();
+  queueHabit(tx, userId, habitId, now);
 }
 
 function touch(
@@ -61,10 +83,7 @@ function touch(
   now: number,
   set: Partial<typeof habits.$inferInsert>,
 ): void {
-  db.update(habits)
-    .set({ ...set, clientUpdatedAt: new Date(now).toISOString() })
-    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
-    .run();
+  db.transaction((tx) => touchIn(tx, userId, habitId, now, set));
 }
 
 export function updateHabit(
@@ -100,7 +119,7 @@ export function reorderHabits(db: AppDb, userId: string, orderedIds: string[], n
     const next = current.map((h) => (moving.has(h.id) ? (queue.shift() ?? h.id) : h.id));
     next.forEach((id, index) => {
       const habit = current.find((h) => h.id === id);
-      if (habit && habit.sortOrder !== index) touch(tx, userId, id, now, { sortOrder: index });
+      if (habit && habit.sortOrder !== index) touchIn(tx, userId, id, now, { sortOrder: index });
     });
   });
 }

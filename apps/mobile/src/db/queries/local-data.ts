@@ -2,6 +2,8 @@ import { newHero, type HeroClass } from '@habit-rpg/game-core';
 
 import * as t from '../schema';
 import { LOCAL_USER_ID, type AppDb } from '../types';
+import { getProfile } from './hero';
+import { enqueue, profileChange } from './outbox';
 
 // Everything that belongs to the local player. Settings and sync state are device-level.
 const PLAYER_TABLES = [
@@ -93,6 +95,9 @@ export function createHero(db: AppDb, input: NewHeroInput): void {
     tx.insert(t.characters)
       .values({ userId, ...newHero() })
       .run();
+    // Signed in first, then onboarded: the new hero's profile is the account's first change.
+    const profile = getProfile(tx, userId);
+    if (profile) enqueue(tx, profileChange(profile, input.now), input.now);
     const flags = { onboardingDone: true, demoMode: false, pendingFaint: null };
     tx.insert(t.settings)
       .values({ id: 1, ...flags })

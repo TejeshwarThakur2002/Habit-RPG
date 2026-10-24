@@ -2,6 +2,7 @@ import { and, asc, eq, isNull } from 'drizzle-orm';
 
 import { characters, habits, inventory, partyMembers, profiles } from '../schema';
 import type { AppDb } from '../types';
+import { enqueue, profileChange } from './outbox';
 
 export type Profile = typeof profiles.$inferSelect;
 export type Character = typeof characters.$inferSelect;
@@ -17,9 +18,11 @@ export function getProfile(db: AppDb, userId: string): Profile | undefined {
  * the name, so it is renamed in the same transaction and the party never shows the old one.
  * A new time zone only moves "today" from now on; days already closed stay closed.
  */
-export function updateProfile(db: AppDb, userId: string, patch: ProfilePatch): void {
+export function updateProfile(db: AppDb, userId: string, patch: ProfilePatch, now: number): void {
   db.transaction((tx) => {
     tx.update(profiles).set(patch).where(eq(profiles.id, userId)).run();
+    const profile = getProfile(tx, userId);
+    if (profile) enqueue(tx, profileChange(profile, now), now);
     if (patch.heroName !== undefined) {
       tx.update(partyMembers)
         .set({ heroName: patch.heroName })
