@@ -23,9 +23,9 @@ insert into public.completions (id, user_id, habit_id, local_date, completed_at,
 insert into public.day_closures (user_id, local_date, hp_lost, missed) values
   ('00000000-0000-0000-0000-00000000000a', '2026-10-20', 0, '[]'),
   ('00000000-0000-0000-0000-00000000000b', '2026-10-20', 6, '[]');
-insert into public.inventory (id, user_id, item_id, purchased_at) values
-  ('30000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'oak-shield', now()),
-  ('30000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-00000000000b', 'wizard-hat', now());
+insert into public.inventory (id, user_id, item_id, purchased_at, client_updated_at) values
+  ('30000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'oak-shield', now(), now()),
+  ('30000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-00000000000b', 'wizard-hat', now(), now());
 insert into public.character_events (user_id, kind, ref_id, xp_delta) values
   ('00000000-0000-0000-0000-00000000000a', 'complete', '20000000-0000-0000-0000-00000000000a', 10),
   ('00000000-0000-0000-0000-00000000000b', 'complete', '20000000-0000-0000-0000-00000000000b', 30);
@@ -68,7 +68,7 @@ select throws_ok($$delete from public.completions$$, '42501', null, 'A can''t de
 select throws_ok($$update public.characters set gold = 9999$$, '42501', null, 'A can''t give themselves gold');
 select throws_ok($$insert into public.character_events (user_id, kind, ref_id) values ('00000000-0000-0000-0000-00000000000a', 'gift', 'x')$$, '42501', null, 'A can''t add hero events');
 select throws_ok($$delete from public.profiles where id = '00000000-0000-0000-0000-00000000000b'$$, '42501', null, 'A can''t delete B''s profile');
-select throws_ok($$insert into public.inventory (id, user_id, item_id, purchased_at) values (gen_random_uuid(), '00000000-0000-0000-0000-00000000000a', 'dragon-cape', now())$$, '42501', null, 'A can''t buy gear directly');
+select throws_ok($$insert into public.inventory (id, user_id, item_id, purchased_at, client_updated_at) values (gen_random_uuid(), '00000000-0000-0000-0000-00000000000a', 'dragon-cape', now(), now())$$, '42501', null, 'A can''t buy gear directly');
 
 -- Signed in as player B: the same tables now show only B.
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000b","role":"authenticated"}', true);
