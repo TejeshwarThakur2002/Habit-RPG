@@ -11,6 +11,7 @@ import {
   deleteErrorMessage,
   getSupabase,
   sendCode,
+  syncFailure,
 } from '../supabase';
 
 describe('authErrorMessage', () => {
@@ -53,6 +54,24 @@ describe('deleteErrorMessage', () => {
       "Your account couldn't be deleted. Try again.",
     );
     expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe('syncFailure', () => {
+  it('retries when the server cannot be reached or fails, but not when it refuses', () => {
+    expect(syncFailure(new FunctionsFetchError(new Error('offline')))).toMatchObject({
+      kind: 'offline',
+    });
+    expect(syncFailure(new FunctionsHttpError(new Response(null, { status: 409 })))).toMatchObject({
+      kind: 'refused',
+      status: 409,
+    });
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    expect(syncFailure(new FunctionsHttpError(new Response(null, { status: 503 })))).toMatchObject({
+      kind: 'server',
+      status: 503,
+    });
     warn.mockRestore();
   });
 });
