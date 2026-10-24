@@ -35,6 +35,24 @@ export async function replayed(userId: string) {
   }
 }
 
+/**
+ * Gives the hero gold, HP or XP within the current level through an event, as the server
+ * would, so replays stay exact.
+ */
+export async function grant(userId: string, { gold = 0, hp = 0, xp = 0 }) {
+  const sql = database();
+  try {
+    await sql`
+      insert into public.character_events (user_id, kind, ref_id, xp_delta, gold_delta, hp_delta)
+      values (${userId}, 'test-grant', ${crypto.randomUUID()}, ${xp}, ${gold}, ${hp})`;
+    await sql`update public.characters
+              set gold = gold + ${gold}, hp = hp + ${hp}, xp_in_level = xp_in_level + ${xp}
+              where user_id = ${userId}`;
+  } finally {
+    await sql.end();
+  }
+}
+
 export interface TestUser {
   id: string;
   token: string;

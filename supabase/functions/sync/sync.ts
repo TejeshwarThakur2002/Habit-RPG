@@ -4,6 +4,7 @@
 import type { Sql } from 'postgres';
 
 import type { SyncRequest, SyncResponse } from '../_shared/shared/index.ts';
+import { lockPlayer } from '../_server/lock.ts';
 import { pullChanges } from './pull.ts';
 import { pushChanges } from './push.ts';
 import { characterOf } from './rows.ts';
@@ -14,9 +15,7 @@ export async function runSync(
   request: SyncRequest,
 ): Promise<SyncResponse> {
   return await sql.begin(async (tx) => {
-    // Two syncs for one player (two phones, or a retry) take turns, so neither can act on a
-    // hero the other is about to change. The lock ends with the transaction.
-    await tx`select pg_advisory_xact_lock(hashtextextended(${userId}, 0))`;
+    await lockPlayer(tx, userId);
     // The database's clock, the same one that stamps every row in this transaction.
     const [{ now }] = await tx`select now() as now`;
     const { applied, rejected } = await pushChanges(tx, userId, request.changes, now as Date);

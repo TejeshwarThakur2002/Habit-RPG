@@ -14,7 +14,7 @@ import {
   type GearId,
 } from '../_shared/game-core/index.ts';
 import type { Change, RejectionReason } from '../_shared/shared/index.ts';
-import { changeHero, loadHero, loadStats } from './hero.ts';
+import { changeHero, loadHero, loadStats } from '../_server/hero.ts';
 import type { Outcome } from './push-habits.ts';
 
 type InventoryChange = Extract<Change, { table: 'inventory' }>;
