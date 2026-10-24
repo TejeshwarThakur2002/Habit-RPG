@@ -1,5 +1,5 @@
 // Pushing (SCOPE.md section 8.3), one change at a time in the order the phone made them. The
-// profile also creates the server hero on the first sync. Gear and profile edits follow (D35).
+// profile also creates the server hero on the first sync.
 
 import type { TransactionSql } from 'postgres';
 
@@ -7,24 +7,11 @@ import { newHero } from '../_shared/game-core/index.ts';
 import type { Change, SyncResponse } from '../_shared/shared/index.ts';
 import { pushCompletion } from './push-completions.ts';
 import { pushHabit, type Outcome } from './push-habits.ts';
+import { pushInventory } from './push-inventory.ts';
 
 export interface PushResult {
   applied: string[];
   rejected: SyncResponse['rejected'];
-}
-
-const SUPPORTED = new Set(['profiles', 'habits', 'completions']);
-
-/** A request carrying a change this version can't apply yet is refused as a whole. */
-export class UnsupportedChangeError extends Error {
-  constructor(readonly table: string) {
-    super(`Changes to ${table} are not supported yet`);
-  }
-}
-
-export function assertSupported(changes: readonly Change[]): void {
-  const other = changes.find((c) => !SUPPORTED.has(c.table));
-  if (other) throw new UnsupportedChangeError(other.table);
 }
 
 type ProfileChange = Extract<Change, { table: 'profiles' }>;
@@ -63,6 +50,25 @@ async function pushHabitChange(
   return await pushHabit(sql, userId, change);
 }
 
+async function pushChange(
+  sql: TransactionSql,
+  userId: string,
+  change: Change,
+  now: Date,
+): Promise<Outcome> {
+  switch (change.table) {
+    case 'profiles':
+      await applyProfile(sql, userId, change);
+      return { applied: true };
+    case 'habits':
+      return await pushHabitChange(sql, userId, change);
+    case 'completions':
+      return await pushCompletion(sql, userId, change, now);
+    case 'inventory':
+      return await pushInventory(sql, userId, change);
+  }
+}
+
 export async function pushChanges(
   sql: TransactionSql,
   userId: string,
@@ -71,17 +77,7 @@ export async function pushChanges(
 ): Promise<PushResult> {
   const result: PushResult = { applied: [], rejected: [] };
   for (const change of changes) {
-    let outcome: Outcome;
-    if (change.table === 'profiles') {
-      await applyProfile(sql, userId, change);
-      outcome = { applied: true };
-    } else if (change.table === 'habits') {
-      outcome = await pushHabitChange(sql, userId, change);
-    } else if (change.table === 'completions') {
-      outcome = await pushCompletion(sql, userId, change, now);
-    } else {
-      continue;
-    }
+    const outcome = await pushChange(sql, userId, change, now);
     if (outcome.applied) result.applied.push(change.id);
     else result.rejected.push({ id: change.id, table: change.table, reason: outcome.reason });
   }

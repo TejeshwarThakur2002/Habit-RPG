@@ -132,20 +132,3 @@ test('pulls 500 rows at a time, oldest first, and never another player’s rows'
     await sql.end();
   }
 });
-
-test('a request with changes this version cannot apply yet is refused whole', async () => {
-  await withUser(async ({ token }) => {
-    const purchase = {
-      table: 'inventory',
-      op: 'upsert',
-      id: crypto.randomUUID(),
-      client_updated_at: AT,
-      data: { item_id: 'oak-shield', equipped: false, purchased_at: AT },
-    };
-    const res = await callSync(token, request(0, [profileChange('Ada'), purchase]));
-    assertEquals(res.status, 501);
-    // Not even the profile was written: the request was refused before the transaction.
-    const after = syncResponseSchema.parse((await callSync(token, request(0))).json);
-    assertEquals(after.changes, []);
-  });
-});

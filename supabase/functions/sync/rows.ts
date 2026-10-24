@@ -70,7 +70,9 @@ export function completionChange(row: Row): ServerChange {
   };
 }
 
+/** An undone purchase is a tombstone on the server; the phone just deletes its copy. */
 export function inventoryChange(row: Row): ServerChange {
+  if (row.deleted_at !== null) return { table: 'inventory', op: 'delete', id: row.id as string };
   return {
     table: 'inventory',
     op: 'upsert',

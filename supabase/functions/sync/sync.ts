@@ -5,7 +5,7 @@ import type { Sql } from 'postgres';
 
 import type { SyncRequest, SyncResponse } from '../_shared/shared/index.ts';
 import { pullChanges } from './pull.ts';
-import { assertSupported, pushChanges } from './push.ts';
+import { pushChanges } from './push.ts';
 import { characterOf } from './rows.ts';
 
 export async function runSync(
@@ -13,7 +13,6 @@ export async function runSync(
   userId: string,
   request: SyncRequest,
 ): Promise<SyncResponse> {
-  assertSupported(request.changes);
   return await sql.begin(async (tx) => {
     // Two syncs for one player (two phones, or a retry) take turns, so neither can act on a
     // hero the other is about to change. The lock ends with the transaction.
