@@ -107,3 +107,23 @@ export const habitChange = (
     ...data,
   },
 });
+
+/** A completion from the phone; the server ignores any reward and works it out itself. */
+export const completionChange = (
+  id: string,
+  habitId: string,
+  localDate: string,
+  completedAt: string,
+  undoneAt: string | null = null,
+) => ({
+  table: 'completions',
+  op: 'upsert',
+  id,
+  client_updated_at: completedAt,
+  data: {
+    habit_id: habitId,
+    local_date: localDate,
+    completed_at: completedAt,
+    undone_at: undoneAt,
+  },
+});
