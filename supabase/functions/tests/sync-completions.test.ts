@@ -11,7 +11,6 @@ import {
   heroStats,
   localDate,
   newHero,
-  replayHero,
   xpToNext,
 } from '../_shared/game-core/index.ts';
 import { syncResponseSchema, type ServerChange } from '../_shared/shared/index.ts';
@@ -24,6 +23,7 @@ import {
   habitChange,
   newUser,
   profileChange,
+  replayed,
   request,
   type TestUser,
 } from './helpers.ts';
@@ -67,19 +67,6 @@ function completionIn(changes: ServerChange[], id: string) {
     .findLast((r) => r.id === id);
   assert(row, `completion ${id} was not pulled`);
   return row as unknown as { xp_awarded: number; gold_awarded: number; undone_at: string | null };
-}
-
-/** The hero the player's character_events add up to. */
-async function replayed(userId: string) {
-  const sql = database();
-  try {
-    const rows = await sql`
-      select xp_delta, gold_delta, hp_delta from public.character_events
-      where user_id = ${userId} order by id`;
-    return replayHero(rows.map((r) => ({ xp: r.xp_delta, gold: r.gold_delta, hp: r.hp_delta })));
-  } finally {
-    await sql.end();
-  }
 }
 
 test('the reward is worked out on the server with game-core', async () => {

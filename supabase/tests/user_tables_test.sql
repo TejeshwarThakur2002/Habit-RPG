@@ -2,7 +2,7 @@
 -- account deletion removing everything.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(16);
 
 select tables_are(
   'public',
@@ -71,11 +71,23 @@ select throws_ok(
 select throws_ok(
   $$update public.characters set gold = -1 where user_id = '00000000-0000-0000-0000-00000000000a'$$, '23514', null, 'gold can''t go below 0'
 );
+insert into public.inventory (id, user_id, item_id, purchased_at, client_updated_at)
+  values ('30000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', 'oak-shield', now(), now());
 select throws_ok(
-  $$insert into public.inventory (id, user_id, item_id, purchased_at) values
-    (gen_random_uuid(), '00000000-0000-0000-0000-00000000000a', 'oak-shield', now()),
-    (gen_random_uuid(), '00000000-0000-0000-0000-00000000000a', 'oak-shield', now())$$,
+  $$insert into public.inventory (id, user_id, item_id, purchased_at, client_updated_at)
+    values (gen_random_uuid(), '00000000-0000-0000-0000-00000000000a', 'oak-shield', now(), now())$$,
   '23505', null, 'an item can be owned only once'
+);
+-- An undone purchase is a tombstone (D39): it can't be worn, and the item can be bought again.
+update public.inventory set deleted_at = now() where id = '30000000-0000-0000-0000-000000000001';
+select throws_ok(
+  $$update public.inventory set equipped = true where id = '30000000-0000-0000-0000-000000000001'$$,
+  '23514', null, 'an undone purchase can''t be worn'
+);
+select lives_ok(
+  $$insert into public.inventory (id, user_id, item_id, purchased_at, client_updated_at)
+    values (gen_random_uuid(), '00000000-0000-0000-0000-00000000000a', 'oak-shield', now(), now())$$,
+  'after an undone purchase the item can be bought again'
 );
 
 -- Deleting the account (section 9.6) removes every row that belongs to the player.
