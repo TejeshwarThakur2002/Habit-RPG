@@ -21,6 +21,7 @@ async function setup(mode: AccountMode = 'local', deviceTimeZone = 'America/Toro
     onReduceMotion: jest.fn(),
     onSignOut: jest.fn(),
     onLinkAccount: jest.fn(),
+    onDeleteAccount: jest.fn(),
     onClose: jest.fn(),
   };
   await render(<SettingsView {...props} />);
@@ -89,6 +90,17 @@ describe('SettingsView', () => {
     expect(onLinkAccount).toHaveBeenCalledTimes(1);
     await fireEvent.press(button('Sign out'));
     expect(onSignOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers to delete the account only when signed in', async () => {
+    const { onDeleteAccount } = await setup('account');
+    await fireEvent.press(button('Delete account'));
+    expect(onDeleteAccount).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['local', 'demo'] as const)('has no account to delete in %s mode', async (mode) => {
+    await setup(mode);
+    expect(screen.queryByRole('button', { name: 'Delete account' })).toBeNull();
   });
 
   it('shows the signed-in email and that the hero is not synced yet', async () => {

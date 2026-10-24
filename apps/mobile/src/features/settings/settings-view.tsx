@@ -30,6 +30,8 @@ export interface SettingsViewProps {
   onSignOut: () => void;
   /** Opens "Link an account" for a hero made without one (D34). */
   onLinkAccount: () => void;
+  /** Opens "Delete account", for a signed-in player (F10). */
+  onDeleteAccount: () => void;
   onClose: () => void;
 }
 
@@ -104,6 +106,9 @@ export function SettingsView(props: SettingsViewProps) {
           <Button label="Link an account" variant="secondary" onPress={props.onLinkAccount} />
         )}
         <Button label={account.button} variant="danger" onPress={props.onSignOut} />
+        {props.mode === 'account' && (
+          <Button label="Delete account" variant="danger" onPress={props.onDeleteAccount} />
+        )}
       </Section>
 
       <Section title="About">

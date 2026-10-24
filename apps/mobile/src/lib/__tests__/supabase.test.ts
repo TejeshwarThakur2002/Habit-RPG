@@ -1,6 +1,17 @@
-import { AuthApiError, AuthRetryableFetchError } from '@supabase/supabase-js';
+import {
+  AuthApiError,
+  AuthRetryableFetchError,
+  FunctionsFetchError,
+  FunctionsHttpError,
+} from '@supabase/supabase-js';
 
-import { authErrorMessage, getSupabase, sendCode } from '../supabase';
+import {
+  authErrorMessage,
+  deleteAccount,
+  deleteErrorMessage,
+  getSupabase,
+  sendCode,
+} from '../supabase';
 
 describe('authErrorMessage', () => {
   it('explains a wrong or expired code', () => {
@@ -29,11 +40,32 @@ describe('authErrorMessage', () => {
   });
 });
 
+describe('deleteErrorMessage', () => {
+  it('asks for a connection when the server cannot be reached', () => {
+    expect(deleteErrorMessage(new FunctionsFetchError(new Error('offline')))).toMatch(
+      /need to be online.*Nothing was deleted/,
+    );
+  });
+
+  it('logs a server error and asks to try again', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    expect(deleteErrorMessage(new FunctionsHttpError(new Response(null, { status: 500 })))).toBe(
+      "Your account couldn't be deleted. Try again.",
+    );
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
 describe('without Supabase settings', () => {
   it('turns email sign-in off instead of crashing, so local play still works', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     expect(getSupabase()).toBeNull();
     expect(await sendCode('ada@example.com')).toEqual({
+      ok: false,
+      message: expect.stringMatching(/isn't set up in this build/),
+    });
+    expect(await deleteAccount()).toEqual({
       ok: false,
       message: expect.stringMatching(/isn't set up in this build/),
     });
