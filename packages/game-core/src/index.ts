@@ -5,6 +5,7 @@ export * from './constants.ts';
 export * from './character.ts';
 export * from './dates.ts';
 export * from './day-close.ts';
+export * from './events.ts';
 export * from './gear.ts';
 export { clamp, divRound, hash32 } from './math.ts';
 export * from './reminders.ts';
