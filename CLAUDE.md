@@ -55,7 +55,8 @@ pnpm supabase:stop
 pnpm exec supabase db reset   # re-apply migrations and seed locally
 pnpm db:test              # pgTAP database tests (schema rules and RLS) against the local stack
 pnpm functions:check      # functions copy is current, deno lint, deno check
-pnpm functions:serve      # serve Edge Functions locally (writes a local CRON_SECRET first)
+pnpm functions:serve      # serve Edge Functions locally; first stores a local CRON_SECRET in
+                          # supabase/functions/.env and Vault (rerun after a db reset)
 pnpm functions:test       # Deno tests for Edge Functions; the integration tests call the
                           # running functions, so start `pnpm functions:serve` first
 ```
