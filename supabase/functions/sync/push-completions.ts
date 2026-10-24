@@ -11,15 +11,11 @@ import {
   isActiveOn,
   isCompletionDateAllowed,
   isScheduledOn,
-  localDate,
   xpBonusFor,
-  type Category,
-  type ClosingHabit,
-  type Difficulty,
-  type HabitType,
 } from '../_shared/game-core/index.ts';
 import type { Change } from '../_shared/shared/index.ts';
-import { changeHero, loadHero, loadStats } from './hero.ts';
+import { loadHabit, type ServerHabit } from '../_server/habits.ts';
+import { changeHero, loadHero, loadStats } from '../_server/hero.ts';
 import type { Outcome } from './push-habits.ts';
 
 type CompletionChange = Extract<Change, { table: 'completions' }>;
@@ -41,26 +37,6 @@ async function undo(sql: TransactionSql, userId: string, row: StoredCompletion, 
   const { hero } = applyXp(state.hero, -row.xp_awarded, state.hero.hp);
   const after = { ...hero, gold: Math.max(0, hero.gold - row.gold_awarded) };
   await changeHero(sql, userId, { kind: 'undo', ref: row.id }, state.hero, after);
-}
-
-async function loadHabit(sql: TransactionSql, habitId: string, timeZone: string) {
-  const [h] = await sql`
-    select user_id, type, difficulty, category, weekdays, created_date::text as created_date,
-           archived_at, deleted_at
-    from public.habits where id = ${habitId}`;
-  if (!h) return null;
-  const toDate = (t: Date | null) => (t ? localDate(t.getTime(), timeZone) : null);
-  const habit: ClosingHabit & { category: Category } = {
-    id: habitId,
-    type: h.type as HabitType,
-    difficulty: h.difficulty as Difficulty,
-    category: h.category as Category,
-    weekdays: h.weekdays as number,
-    createdDate: h.created_date as string,
-    archivedDate: toDate(h.archived_at),
-    deletedDate: toDate(h.deleted_at),
-  };
-  return { owner: h.user_id as string, habit };
 }
 
 /** A completion the server already has: a retry changes nothing; an undo is applied once. */
@@ -123,7 +99,7 @@ async function applyNewCompletion(
   sql: TransactionSql,
   userId: string,
   change: CompletionChange,
-  habit: ClosingHabit & { category: Category },
+  habit: ServerHabit,
 ): Promise<void> {
   const d = change.data;
   // Rivals may have been undone just now, so the hero is read fresh.
