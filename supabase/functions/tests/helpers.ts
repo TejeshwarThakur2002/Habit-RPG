@@ -3,6 +3,8 @@
 
 import postgres from 'postgres';
 
+import { replayHero } from '../_shared/game-core/index.ts';
+
 const env = (name: string) => Deno.env.get(name) ?? '';
 
 export const API_URL = env('API_URL');
@@ -18,6 +20,19 @@ const ANON_KEY = env('ANON_KEY');
 
 export function database() {
   return postgres(env('DB_URL'), { prepare: false, max: 1, onnotice: () => {} });
+}
+
+/** The hero the player's character_events add up to. */
+export async function replayed(userId: string) {
+  const sql = database();
+  try {
+    const rows = await sql`
+      select xp_delta, gold_delta, hp_delta from public.character_events
+      where user_id = ${userId} order by id`;
+    return replayHero(rows.map((r) => ({ xp: r.xp_delta, gold: r.gold_delta, hp: r.hp_delta })));
+  } finally {
+    await sql.end();
+  }
 }
 
 export interface TestUser {
@@ -126,4 +141,21 @@ export const completionChange = (
     completed_at: completedAt,
     undone_at: undoneAt,
   },
+});
+
+/** A gear upsert from the phone: a purchase the first time, then equipping or taking off. */
+export const gearChange = (id: string, itemId: string, at: string, equipped = false) => ({
+  table: 'inventory',
+  op: 'upsert',
+  id,
+  client_updated_at: at,
+  data: { item_id: itemId, equipped, purchased_at: AT },
+});
+
+/** The shop's Undo: the purchase is taken back. */
+export const undoPurchase = (id: string, at: string) => ({
+  table: 'inventory',
+  op: 'delete',
+  id,
+  client_updated_at: at,
 });
