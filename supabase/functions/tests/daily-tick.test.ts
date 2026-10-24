@@ -2,7 +2,7 @@
 // closeDays takes the time as an argument, so these tests can stand on any morning, including
 // the daylight-saving days in Auckland and Los Angeles (section 13).
 
-import { assertEquals } from '@std/assert';
+import { assertEquals, assertNotEquals } from '@std/assert';
 
 import { latestClosableDate, newHero, zonedInstant } from '../_shared/game-core/index.ts';
 import { closeDays } from '../_server/close-days.ts';
@@ -208,4 +208,20 @@ test('the job closes the finished days of every player who is due, once', async 
     await callTick(CRON_SECRET);
     assertEquals(await heroOf(p.id), hero);
   });
+});
+
+test("pg_cron's call reaches daily-tick through the gateway with the right secret", async () => {
+  // What the hourly job runs, committed so pg_net really sends it (D41).
+  const [{ id }] = await query((sql) => sql`select private.call_daily_tick() as id`);
+  assertNotEquals(id, null, 'Vault has no project_url or cron_secret; run pnpm functions:test');
+  let status: number | null = null;
+  for (let attempt = 0; attempt < 60 && status === null; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const [row] = await query(
+      (sql) => sql`
+      select status_code, error_msg from net._http_response where id = ${id}`,
+    );
+    if (row) status = (row.status_code as number | null) ?? -1;
+  }
+  assertEquals(status, 200);
 });
