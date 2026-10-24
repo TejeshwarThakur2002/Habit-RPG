@@ -9,17 +9,20 @@ import {
   baseValues,
   computeReward,
   heroStats,
+  latestClosableDate,
   localDate,
   newHero,
   xpToNext,
 } from '../_shared/game-core/index.ts';
 import { syncResponseSchema, type ServerChange } from '../_shared/shared/index.ts';
+import { closeDays } from '../_server/close-days.ts';
 import {
   NO_STACK,
   callSync,
   completionChange,
   database,
   deleteUser,
+  grant,
   habitChange,
   newUser,
   profileChange,
@@ -252,5 +255,34 @@ test('the event log replays to exactly the stored hero', async () => {
       },
     );
     assert(res.character.gold > 0);
+  });
+});
+
+test('a late completion gives back the HP its closed day cost, once', async () => {
+  await withPlayer(async (p) => {
+    // Well below max HP, so a second refund would show rather than hit the cap.
+    await grant(p.id, { hp: -20 });
+    const sql = database();
+    try {
+      // Signed up two days ago; the days since then close with the quest missed.
+      await sql`update public.profiles set created_at = now() - interval '2 days'
+                where id = ${p.id}`;
+      await sql.begin((tx) => closeDays(tx, p.id, new Date()));
+    } finally {
+      await sql.end();
+    }
+    const day = latestClosableDate(Date.now(), TZ);
+    const before = (await push(p, [])).character.hp;
+    assert(before < newHero().hp);
+
+    const late = completionChange(crypto.randomUUID(), p.habit, day, at());
+    const res = await push(p, [late]);
+    assertEquals(res.character.hp, before + baseValues('daily', 'easy').hpLoss);
+
+    // Undoing and completing it again doesn't give the HP back a second time.
+    await push(p, [completionChange(late.id, p.habit, day, late.data.completed_at, at(1))]);
+    const again = await push(p, [completionChange(crypto.randomUUID(), p.habit, day, at(2))]);
+    assertEquals(again.character.hp, res.character.hp);
+    assertEquals((await replayed(p.id)).hp, again.character.hp);
   });
 });

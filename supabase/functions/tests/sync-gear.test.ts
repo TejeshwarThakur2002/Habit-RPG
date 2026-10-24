@@ -8,9 +8,9 @@ import { syncResponseSchema, type ServerChange } from '../_shared/shared/index.t
 import {
   NO_STACK,
   callSync,
-  database,
   deleteUser,
   gearChange,
+  grant,
   newUser,
   profileChange,
   replayed,
@@ -44,20 +44,6 @@ async function push(user: TestUser, changes: unknown[], cursor = 0) {
   const res = await callSync(user.token, request(cursor, changes));
   assertEquals(res.status, 200, JSON.stringify(res.json));
   return syncResponseSchema.parse(res.json);
-}
-
-/** Gives the hero gold or HP through an event, as the server would, so replays stay exact. */
-async function grant(userId: string, { gold = 0, hp = 0 }) {
-  const sql = database();
-  try {
-    await sql`
-      insert into public.character_events (user_id, kind, ref_id, xp_delta, gold_delta, hp_delta)
-      values (${userId}, 'test-grant', ${uuid()}, 0, ${gold}, ${hp})`;
-    await sql`update public.characters set gold = gold + ${gold}, hp = hp + ${hp}
-              where user_id = ${userId}`;
-  } finally {
-    await sql.end();
-  }
 }
 
 /** The last pulled change to an inventory row, failing the test if there is none. */
