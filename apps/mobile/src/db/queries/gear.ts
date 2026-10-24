@@ -7,6 +7,7 @@ import { and, eq } from 'drizzle-orm';
 import { characters, inventory } from '../schema';
 import type { AppDb } from '../types';
 import { getCharacter, getProfile } from './hero';
+import { enqueue, inventoryChange, undoPurchaseChange } from './outbox';
 import { heroStatsFor } from './quest-board';
 
 export type InventoryRow = typeof inventory.$inferSelect;
@@ -42,12 +43,13 @@ export function buyGear(
       .set({ gold: character.gold - gearItem(input.itemId).price })
       .where(eq(characters.userId, input.userId))
       .run();
+    queueItem(tx, inventoryId, input.now);
     return { ok: true, inventoryId };
   });
 }
 
 /** The toast's Undo (SCOPE.md section 5.6): gives the gold back and removes the item. */
-export function undoPurchase(db: AppDb, userId: string, inventoryId: string): void {
+export function undoPurchase(db: AppDb, userId: string, inventoryId: string, now: number): void {
   db.transaction((tx) => {
     const row = tx
       .select()
@@ -56,9 +58,10 @@ export function undoPurchase(db: AppDb, userId: string, inventoryId: string): vo
       .get();
     const character = getCharacter(tx, userId);
     if (!row || !character) return;
-    if (row.equipped) setEquipped(tx, userId, row.itemId, false);
+    if (row.equipped) setEquipped(tx, userId, row.itemId, false, now);
 
     tx.delete(inventory).where(eq(inventory.id, inventoryId)).run();
+    enqueue(tx, undoPurchaseChange(inventoryId, now), now);
     tx.update(characters)
       .set({ gold: character.gold + gearItem(row.itemId).price })
       .where(eq(characters.userId, userId))
@@ -70,7 +73,13 @@ export function undoPurchase(db: AppDb, userId: string, inventoryId: string): vo
  * Equips an owned item (taking off whatever shares its slot) or takes it off. Stats change
  * at once; if max HP drops (less CON), HP is lowered to fit, since HP never exceeds max.
  */
-export function setEquipped(db: AppDb, userId: string, itemId: GearId, on: boolean): void {
+export function setEquipped(
+  db: AppDb,
+  userId: string,
+  itemId: GearId,
+  on: boolean,
+  now: number,
+): void {
   db.transaction((tx) => {
     const rows = listInventory(tx, userId);
     if (!rows.some((row) => row.itemId === itemId)) return;
@@ -81,6 +90,7 @@ export function setEquipped(db: AppDb, userId: string, itemId: GearId, on: boole
       const equipped = next.includes(row.itemId);
       if (equipped !== row.equipped) {
         tx.update(inventory).set({ equipped }).where(eq(inventory.id, row.id)).run();
+        queueItem(tx, row.id, now);
       }
     }
 
@@ -108,3 +118,8 @@ export function getHeroSheet(db: AppDb, userId: string) {
 }
 
 export type HeroSheet = NonNullable<ReturnType<typeof getHeroSheet>>;
+
+function queueItem(tx: AppDb, inventoryId: string, now: number): void {
+  const row = tx.select().from(inventory).where(eq(inventory.id, inventoryId)).get();
+  if (row) enqueue(tx, inventoryChange(row, now), now);
+}

@@ -25,7 +25,7 @@ function memberName(userId: string) {
 
 describe('updateProfile', () => {
   it('renames the hero everywhere the name is stored', () => {
-    updateProfile(db, LOCAL_USER_ID, { heroName: 'Lady Merge' });
+    updateProfile(db, LOCAL_USER_ID, { heroName: 'Lady Merge' }, NOW);
 
     expect(getProfile(db, LOCAL_USER_ID)?.heroName).toBe('Lady Merge');
     expect(memberName(LOCAL_USER_ID)).toBe('Lady Merge');
@@ -33,7 +33,7 @@ describe('updateProfile', () => {
   });
 
   it('changes the time zone without touching the name', () => {
-    updateProfile(db, LOCAL_USER_ID, { timezone: 'Pacific/Auckland' });
+    updateProfile(db, LOCAL_USER_ID, { timezone: 'Pacific/Auckland' }, NOW);
 
     expect(getProfile(db, LOCAL_USER_ID)).toMatchObject({
       heroName: 'Sir Commit',

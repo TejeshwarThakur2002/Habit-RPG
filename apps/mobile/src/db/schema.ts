@@ -10,6 +10,7 @@ import type {
   HabitType,
   HeroClass,
 } from '@habit-rpg/game-core';
+import type { Change } from '@habit-rpg/shared';
 import { sql } from 'drizzle-orm';
 import {
   index,
@@ -178,7 +179,8 @@ export const outbox = sqliteTable('outbox', {
   tableName: text('table_name').notNull(),
   rowId: text('row_id').notNull(),
   op: text('op').$type<'upsert' | 'delete'>().notNull(),
-  payload: text('payload', { mode: 'json' }).notNull(),
+  /** The change exactly as `sync` takes it (packages/shared `Change`). */
+  payload: text('payload', { mode: 'json' }).$type<Change>().notNull(),
   createdAt: text('created_at').notNull(),
   attempts: integer('attempts').notNull().default(0),
   lastError: text('last_error'),

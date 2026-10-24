@@ -49,7 +49,7 @@ export default function Settings() {
         },
         onDismissHint: () => updateSettings(db, { notificationHintSeen: true }),
       }}
-      onSaveHero={(fields) => updateProfile(db, LOCAL_USER_ID, fields)}
+      onSaveHero={(fields) => updateProfile(db, LOCAL_USER_ID, fields, Date.now())}
       onReduceMotion={(value) => updateSettings(db, { reduceMotion: value })}
       onSignOut={() =>
         confirmSignOut(mode, profile.heroName, () => {

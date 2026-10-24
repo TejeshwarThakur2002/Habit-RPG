@@ -15,6 +15,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { characters, completions, habits } from '../schema';
 import type { AppDb } from '../types';
 import { getCharacter, getProfile, listEquippedGear } from './hero';
+import { completionChange, enqueue } from './outbox';
 import { heroStatsFor } from './quest-board';
 
 export interface CompleteInput {
@@ -80,6 +81,7 @@ export function completeHabit(db: AppDb, input: CompleteInput): CompleteResult |
         bossDamage: reward.bossDamage,
       })
       .run();
+    queueCompletion(tx, completionId, input.now);
 
     // Max HP after this completion: a new CON point can raise it.
     const { hero, levelsGained } = applyXp(
@@ -129,6 +131,7 @@ export function undoCompletion(db: AppDb, userId: string, habitId: string, now: 
       .set({ undoneAt: new Date(now).toISOString() })
       .where(eq(completions.id, completion.id))
       .run();
+    queueCompletion(tx, completion.id, now);
 
     const { hero } = applyXp(character, -completion.xpAwarded, character.hp);
     tx.update(characters)
@@ -140,4 +143,9 @@ export function undoCompletion(db: AppDb, userId: string, habitId: string, now: 
       .run();
     return true;
   });
+}
+
+function queueCompletion(tx: AppDb, completionId: string, now: number): void {
+  const row = tx.select().from(completions).where(eq(completions.id, completionId)).get();
+  if (row) enqueue(tx, completionChange(row), now);
 }
