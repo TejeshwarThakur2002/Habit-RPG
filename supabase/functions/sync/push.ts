@@ -1,18 +1,19 @@
 // Pushing (SCOPE.md section 8.3), one change at a time in the order the phone made them. The
-// profile also creates the server hero on the first sync. Completions and gear follow (D35).
+// profile also creates the server hero on the first sync. Gear and profile edits follow (D35).
 
 import type { TransactionSql } from 'postgres';
 
 import { newHero } from '../_shared/game-core/index.ts';
 import type { Change, SyncResponse } from '../_shared/shared/index.ts';
-import { pushHabit } from './push-habits.ts';
+import { pushCompletion } from './push-completions.ts';
+import { pushHabit, type Outcome } from './push-habits.ts';
 
 export interface PushResult {
   applied: string[];
   rejected: SyncResponse['rejected'];
 }
 
-const SUPPORTED = new Set(['profiles', 'habits']);
+const SUPPORTED = new Set(['profiles', 'habits', 'completions']);
 
 /** A request carrying a change this version can't apply yet is refused as a whole. */
 export class UnsupportedChangeError extends Error {
@@ -51,24 +52,36 @@ async function applyProfile(
     on conflict (user_id) do nothing`;
 }
 
+/** Habits belong to a profile: a phone always pushes its profile first. */
+async function pushHabitChange(
+  sql: TransactionSql,
+  userId: string,
+  change: Extract<Change, { table: 'habits' }>,
+): Promise<Outcome> {
+  const [profile] = await sql`select 1 from public.profiles where id = ${userId}`;
+  if (!profile) return { applied: false, reason: 'invalid' };
+  return await pushHabit(sql, userId, change);
+}
+
 export async function pushChanges(
   sql: TransactionSql,
   userId: string,
   changes: readonly Change[],
+  now: Date,
 ): Promise<PushResult> {
   const result: PushResult = { applied: [], rejected: [] };
   for (const change of changes) {
+    let outcome: Outcome;
     if (change.table === 'profiles') {
       await applyProfile(sql, userId, change);
-      result.applied.push(change.id);
+      outcome = { applied: true };
+    } else if (change.table === 'habits') {
+      outcome = await pushHabitChange(sql, userId, change);
+    } else if (change.table === 'completions') {
+      outcome = await pushCompletion(sql, userId, change, now);
+    } else {
       continue;
     }
-    if (change.table !== 'habits') continue;
-    // Habits belong to a profile: a phone always pushes its profile first.
-    const [profile] = await sql`select 1 from public.profiles where id = ${userId}`;
-    const outcome = profile
-      ? await pushHabit(sql, userId, change)
-      : ({ applied: false, reason: 'invalid' } as const);
     if (outcome.applied) result.applied.push(change.id);
     else result.rejected.push({ id: change.id, table: change.table, reason: outcome.reason });
   }
