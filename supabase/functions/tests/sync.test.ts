@@ -135,25 +135,19 @@ test('pulls 500 rows at a time, oldest first, and never another player’s rows'
 
 test('a request with changes this version cannot apply yet is refused whole', async () => {
   await withUser(async ({ token }) => {
-    const habit = {
-      table: 'habits',
+    const completion = {
+      table: 'completions',
       op: 'upsert',
       id: crypto.randomUUID(),
       client_updated_at: AT,
       data: {
-        name: 'Read',
-        type: 'daily',
-        difficulty: 'easy',
-        category: 'mind',
-        weekdays: 127,
-        reminder_time: null,
-        sort_order: 0,
-        created_date: '2026-10-23',
-        archived_at: null,
-        deleted_at: null,
+        habit_id: crypto.randomUUID(),
+        local_date: '2026-10-23',
+        completed_at: AT,
+        undone_at: null,
       },
     };
-    const res = await callSync(token, request(0, [profileChange('Ada'), habit]));
+    const res = await callSync(token, request(0, [profileChange('Ada'), completion]));
     assertEquals(res.status, 501);
     // Not even the profile was written: the request was refused before the transaction.
     const after = syncResponseSchema.parse((await callSync(token, request(0))).json);

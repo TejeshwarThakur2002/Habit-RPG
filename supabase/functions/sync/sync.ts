@@ -20,7 +20,7 @@ export async function runSync(
     await tx`select pg_advisory_xact_lock(hashtextextended(${userId}, 0))`;
     // The database's clock, the same one that stamps every row in this transaction.
     const [{ now }] = await tx`select now() as now`;
-    const { applied } = await pushChanges(tx, userId, request.changes);
+    const { applied, rejected } = await pushChanges(tx, userId, request.changes);
     const pulled = await pullChanges(tx, userId, request.cursor);
     const [hero] = await tx`
       select *, last_closed_date::text as last_closed_date
@@ -32,7 +32,7 @@ export async function runSync(
       changes: pulled.changes,
       character: characterOf(hero),
       applied,
-      rejected: [],
+      rejected,
     };
   });
 }
