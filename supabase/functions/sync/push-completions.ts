@@ -14,6 +14,7 @@ import {
   xpBonusFor,
 } from '../_shared/game-core/index.ts';
 import type { Change } from '../_shared/shared/index.ts';
+import { voidPenalty } from '../_server/close-days.ts';
 import { loadHabit, type ServerHabit } from '../_server/habits.ts';
 import { changeHero, loadHero, loadStats } from '../_server/hero.ts';
 import type { Outcome } from './push-habits.ts';
@@ -134,4 +135,5 @@ async function applyNewCompletion(
   const { hero } = applyXp(state.hero, reward.xp, after.maxHp);
   const next = { ...hero, gold: hero.gold + reward.gold };
   await changeHero(sql, userId, { kind: 'complete', ref: change.id }, state.hero, next);
+  if (isLate) await voidPenalty(sql, userId, d.local_date, habit.id);
 }
