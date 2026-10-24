@@ -80,12 +80,22 @@ export const changeSchema = z.union([
   }),
 ]);
 
+/**
+ * A linked local hero's history, sent once in time order over several requests (D35, D42).
+ * `started_at` is when the hero was made on the phone; the request with `done` ends it.
+ */
+export const importSchema = z.strictObject({
+  started_at: timestamp,
+  done: z.boolean(),
+});
+
 export const syncRequestSchema = z.strictObject({
   device_id: uuid,
   /** The highest server_seq the phone has applied; 0 before the first sync. */
   cursor: z.int().min(0),
   app_version: z.string().min(1).max(32),
   changes: z.array(changeSchema).max(MAX_CHANGES),
+  import: importSchema.optional(),
 });
 
 export type Change = z.infer<typeof changeSchema>;
