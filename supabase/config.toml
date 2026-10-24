@@ -397,6 +397,11 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Called by pg_cron, not by players, so there is no user JWT to verify; the function checks
+# the CRON_SECRET header itself (DECISIONS.md D40).
+[functions.daily-tick]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
