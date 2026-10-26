@@ -142,7 +142,10 @@ describe('runFirstSync', () => {
     hero();
     habit();
     server.failNext('hero-exists');
-    expect(await first()).toEqual({ status: 'conflict' });
+    expect(await first()).toEqual({
+      status: 'conflict',
+      accountHero: { hero_name: 'Bea', class: 'rogue', level: 3 },
+    });
     expect(db.select().from(outbox).all().length).toBeGreaterThan(0);
     expect(getProfile(db, user)?.heroName).toBe('Ada');
     expect(synced()).toBeNull();

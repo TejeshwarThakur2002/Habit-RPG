@@ -4,7 +4,7 @@
 // retry is scheduled with exponential backoff. It talks to the server only through a transport,
 // so tests use a fake server (D46).
 
-import { syncResponseSchema, type SyncRequest } from '@habit-rpg/shared';
+import { syncResponseSchema, type AccountHero, type SyncRequest } from '@habit-rpg/shared';
 import { asc, count, inArray, sql } from 'drizzle-orm';
 
 import { getSyncState } from '../db/queries/sync-state';
@@ -26,6 +26,8 @@ export type TransportResult =
       status?: number;
       /** The server's error code, e.g. `hero_exists` (D42). */
       code?: string;
+      /** With `hero_exists`: the account's hero (D49). */
+      hero?: AccountHero;
       message: string;
     };
 
@@ -41,6 +43,8 @@ export type SyncOutcome =
       /** When the next attempt is scheduled, or null when only a new trigger will retry. */
       retryInMs: number | null;
       rejected: Rejection[];
+      /** A refusal's code, e.g. `hero_replaced`, which the caller acts on (D49). */
+      code?: string;
     };
 
 export interface SyncEngineOptions {
@@ -91,11 +95,23 @@ export function createSyncEngine(options: SyncEngineOptions) {
   let failures = 0;
   let timer: unknown = null;
 
-  function fail(message: string, kind: 'offline' | 'error', retry: boolean, rejected: Rejection[]) {
+  function fail(
+    message: string,
+    kind: 'offline' | 'error',
+    retry: boolean,
+    rejected: Rejection[],
+    code?: string,
+  ) {
     failures += 1;
     const retryInMs = retry ? retryDelayMs(failures) : null;
     if (retryInMs !== null) timer = setTimer(() => void syncNow(), retryInMs);
-    return { status: kind, message, retryInMs, rejected } satisfies SyncOutcome;
+    return {
+      status: kind,
+      message,
+      retryInMs,
+      rejected,
+      ...(code ? { code } : {}),
+    } satisfies SyncOutcome;
   }
 
   async function run(): Promise<SyncOutcome> {
@@ -125,6 +141,7 @@ export function createSyncEngine(options: SyncEngineOptions) {
           offline ? 'offline' : 'error',
           result.kind !== 'refused',
           rejected,
+          result.code,
         );
       }
       const parsed = syncResponseSchema.safeParse(result.body);

@@ -18,6 +18,8 @@ export type AccountMode = 'demo' | 'local' | 'account';
 
 export interface SettingsViewProps {
   hero: HeroFields;
+  /** Changes when a different hero takes over this phone (D49), so the form starts again. */
+  heroKey: string;
   deviceTimeZone: string;
   reduceMotion: ReduceMotionSetting;
   mode: AccountMode;
@@ -77,6 +79,7 @@ export function SettingsView(props: SettingsViewProps) {
 
       <Section title="Hero">
         <HeroSection
+          key={props.heroKey}
           saved={props.hero}
           deviceTimeZone={props.deviceTimeZone}
           onSave={props.onSaveHero}

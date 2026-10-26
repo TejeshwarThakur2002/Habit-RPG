@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { HeroChoicePrompt } from '@/components/hero-choice-prompt';
 import { SyncNotices } from '@/components/sync-notices';
 import { db } from '@/db/client';
 import { DatabaseGate } from '@/db/database-gate';
@@ -47,6 +48,7 @@ export default function RootLayout() {
       <DatabaseGate>
         <GuardedStack />
         <SyncNotices />
+        <HeroChoicePrompt />
       </DatabaseGate>
     </GestureHandlerRootView>
   );
@@ -75,6 +77,11 @@ function GuardedStack() {
           <Stack.Screen name="modal/settings" options={{ presentation: 'modal' }} />
           <Stack.Screen name="modal/link-account" options={{ presentation: 'modal' }} />
           <Stack.Screen name="modal/delete-account" options={{ presentation: 'modal' }} />
+          {/* No swipe away: the player chooses, or puts it off with "Not now". */}
+          <Stack.Screen
+            name="modal/hero-choice"
+            options={{ presentation: 'modal', gestureEnabled: false }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={__DEV__}>
           <Stack.Screen name="dev/gallery" />

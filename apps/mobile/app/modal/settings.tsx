@@ -33,6 +33,7 @@ export default function Settings() {
   return (
     <SettingsView
       hero={{ heroName: profile.heroName, timezone: profile.timezone }}
+      heroKey={profile.createdAt}
       deviceTimeZone={deviceTimeZone()}
       reduceMotion={reduceMotion}
       mode={mode}

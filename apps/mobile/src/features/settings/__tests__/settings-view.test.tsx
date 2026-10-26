@@ -5,6 +5,7 @@ import { SettingsView, type AccountMode } from '../settings-view';
 async function setup(mode: AccountMode = 'local', deviceTimeZone = 'America/Toronto') {
   const props = {
     hero: { heroName: 'Sir Commit', timezone: 'America/Toronto' },
+    heroKey: '2026-10-20T12:00:00.000Z',
     deviceTimeZone,
     reduceMotion: 'system' as const,
     mode,
@@ -24,13 +25,27 @@ async function setup(mode: AccountMode = 'local', deviceTimeZone = 'America/Toro
     onDeleteAccount: jest.fn(),
     onClose: jest.fn(),
   };
-  await render(<SettingsView {...props} />);
-  return props;
+  const view = await render(<SettingsView {...props} />);
+  return { ...props, rerender: view.rerender };
 }
 
 const button = (name: string) => screen.getByRole('button', { name });
 
 describe('SettingsView', () => {
+  it('starts the hero form again when another hero takes over the phone', async () => {
+    const { rerender, ...props } = await setup('account');
+    await fireEvent.changeText(screen.getByLabelText('Hero name'), 'Half typed');
+    await rerender(
+      <SettingsView
+        {...props}
+        hero={{ heroName: 'Ada', timezone: 'America/Toronto' }}
+        heroKey="2026-10-26T20:47:55.788Z"
+      />,
+    );
+    expect(screen.getByLabelText('Hero name')).toHaveDisplayValue('Ada');
+    expect(button('Save changes')).toBeDisabled();
+  });
+
   it('saves a cleaned hero name only once something changed', async () => {
     const { onSaveHero } = await setup();
     expect(screen.getByLabelText('Hero name')).toHaveDisplayValue('Sir Commit');

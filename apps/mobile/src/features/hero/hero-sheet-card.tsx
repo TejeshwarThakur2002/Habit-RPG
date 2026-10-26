@@ -9,7 +9,7 @@ import type { HeroSheet } from '@/db/queries/gear';
 import { STAT_HELP } from './gear-text';
 
 const STATS: StatName[] = ['STR', 'INT', 'CON', 'LUCK'];
-const CLASS_TITLES = { knight: 'Knight', mage: 'Mage', rogue: 'Rogue' } as const;
+export const CLASS_TITLES = { knight: 'Knight', mage: 'Mage', rogue: 'Rogue' } as const;
 
 /** SCOPE.md section 5.6, item 2: sprite with gear, name, level and class, and the four stats. */
 export function HeroSheetCard({ sheet }: { sheet: HeroSheet }) {
