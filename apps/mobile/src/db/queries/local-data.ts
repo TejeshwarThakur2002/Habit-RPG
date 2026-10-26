@@ -4,6 +4,7 @@ import * as t from '../schema';
 import { LOCAL_USER_ID, type AppDb } from '../types';
 import { getProfile } from './hero';
 import { enqueue, profileChange } from './outbox';
+import { resetCursor } from './sync-state';
 
 // Everything that belongs to the local player. Settings and sync state are device-level.
 const PLAYER_TABLES = [
@@ -20,11 +21,15 @@ const PLAYER_TABLES = [
   t.outbox,
 ] as const;
 
-type Writer = Pick<AppDb, 'delete' | 'insert'>;
+type Writer = Pick<AppDb, 'delete' | 'insert' | 'update'>;
 
-/** Deletes every player row. Callers wrap it in a transaction with whatever comes next. */
+/**
+ * Deletes every player row and rewinds the sync cursor, so the next account starts from the
+ * beginning. Callers wrap it in a transaction with whatever comes next.
+ */
 export function deletePlayerData(tx: Writer): void {
   for (const table of PLAYER_TABLES) tx.delete(table).run();
+  resetCursor(tx);
 }
 
 // A pending faint belongs to the player, so it goes whenever player data does.
