@@ -36,7 +36,7 @@ function settle(tx: AppDb, response: SyncResponse, sent: readonly SentRow[]): vo
  * for the server's version. The hero needs nothing here: the server's hero, applied below,
  * never included the refused change.
  */
-function rollBack(tx: AppDb, rejected: readonly Rejection[]): void {
+export function rollBack(tx: AppDb, rejected: readonly Rejection[]): void {
   for (const { table, id } of rejected) {
     if (table === 'completions') {
       tx.delete(t.completions)

@@ -172,10 +172,21 @@ export function syncFailure(error: unknown): Extract<TransportResult, { ok: fals
   return { ok: false, kind: 'server', status, message: 'The server had a problem' };
 }
 
+const errorBodySchema = z.object({ error: z.string() });
+
 /** The sync engine's transport: one POST to the `sync` Edge Function with the session's token. */
 export async function sendSync(request: SyncRequest): Promise<TransportResult> {
   const supabase = getSupabase();
   if (!supabase) return { ok: false, kind: 'refused', message: "Sync isn't set up in this build" };
   const { data, error } = await supabase.functions.invoke('sync', { body: request });
-  return error ? syncFailure(error) : { ok: true, body: data };
+  if (!error) return { ok: true, body: data };
+  const failure = syncFailure(error);
+  // A refusal says why in its body, e.g. `hero_exists` when the account already has a hero.
+  if (failure.kind === 'refused' && error instanceof FunctionsHttpError) {
+    const body = errorBodySchema.safeParse(
+      await (error.context as Response).json().catch(() => null),
+    );
+    if (body.success) return { ...failure, code: body.data.error };
+  }
+  return failure;
 }
