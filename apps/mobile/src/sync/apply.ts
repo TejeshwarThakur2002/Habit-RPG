@@ -30,6 +30,32 @@ function settle(tx: AppDb, response: SyncResponse, sent: readonly SentRow[]): vo
   if (done.length > 0) tx.delete(t.outbox).where(inArray(t.outbox.id, done)).run();
 }
 
+/**
+ * Undoes on the phone what the server refused (SCOPE.md section 8.3). Only rows the server never
+ * confirmed (no server_seq) go: a refused edit to a row the server already has leaves that row
+ * for the server's version. The hero needs nothing here: the server's hero, applied below,
+ * never included the refused change.
+ */
+function rollBack(tx: AppDb, rejected: readonly Rejection[]): void {
+  for (const { table, id } of rejected) {
+    if (table === 'completions') {
+      tx.delete(t.completions)
+        .where(and(eq(t.completions.id, id), isNull(t.completions.serverSeq)))
+        .run();
+    } else if (table === 'inventory') {
+      tx.delete(t.inventory)
+        .where(and(eq(t.inventory.id, id), isNull(t.inventory.serverSeq)))
+        .run();
+    } else if (table === 'habits') {
+      const unknown = and(eq(t.habits.id, id), isNull(t.habits.serverSeq));
+      if (tx.select({ id: t.habits.id }).from(t.habits).where(unknown).get()) {
+        tx.delete(t.completions).where(eq(t.completions.habitId, id)).run();
+        tx.delete(t.habits).where(unknown).run();
+      }
+    }
+  }
+}
+
 /** Rows the phone still has unsent changes for: the phone's newer version wins until sent. */
 function pendingKeys(tx: AppDb): Set<string> {
   const rows = tx.select({ table: t.outbox.tableName, id: t.outbox.rowId }).from(t.outbox).all();
@@ -147,7 +173,7 @@ function applyChange(tx: AppDb, change: ServerChange, pending: Set<string>): voi
   }
 }
 
-/** Applies a validated response; returns what the server refused, for PR C to roll back. */
+/** Applies a validated response; returns what the server refused, for the player's notices. */
 export function applyResponse(
   db: AppDb,
   response: SyncResponse,
@@ -156,6 +182,7 @@ export function applyResponse(
 ): Rejection[] {
   return db.transaction((tx) => {
     settle(tx, response, sent);
+    rollBack(tx, response.rejected);
     const pending = pendingKeys(tx);
     for (const change of response.changes) applyChange(tx, change, pending);
     const c = response.character;

@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { SyncNotices } from '@/components/sync-notices';
 import { db } from '@/db/client';
 import { DatabaseGate } from '@/db/database-gate';
 import { getSettings } from '@/db/queries/settings';
@@ -45,6 +46,7 @@ export default function RootLayout() {
       <StatusBar style="light" />
       <DatabaseGate>
         <GuardedStack />
+        <SyncNotices />
       </DatabaseGate>
     </GestureHandlerRootView>
   );
