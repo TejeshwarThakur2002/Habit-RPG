@@ -40,7 +40,7 @@ async function handle(req: Request, userId: string): Promise<Response> {
   try {
     return Response.json(await runSync(sql, userId, parsed.data));
   } catch (e: unknown) {
-    if (e instanceof SyncRefusedError) return error(e.status, e.code);
+    if (e instanceof SyncRefusedError) return Response.json(e.body, { status: e.status });
     // Logged without the payload, so no habit name reaches the server logs (section 9.6).
     console.error('sync failed', e instanceof Error ? e.message : e);
     return error(500, 'Sync failed');
