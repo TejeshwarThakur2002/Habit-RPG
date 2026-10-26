@@ -1,4 +1,4 @@
-import type { SyncRequest } from '@habit-rpg/shared';
+import { syncRefusalSchema, type SyncRequest } from '@habit-rpg/shared';
 import {
   AuthError,
   FunctionsFetchError,
@@ -155,7 +155,7 @@ export async function deleteAccount(): Promise<AuthResult<null>> {
 }
 
 /** How a failed `sync` call is retried: no answer and 5xx are, a 4xx isn't (D46). */
-export function syncFailure(error: unknown): Extract<TransportResult, { ok: false }> {
+export function syncFailure(error: unknown): Failure {
   if (error instanceof FunctionsFetchError) {
     return { ok: false, kind: 'offline', message: "Can't reach the server" };
   }
@@ -172,7 +172,18 @@ export function syncFailure(error: unknown): Extract<TransportResult, { ok: fals
   return { ok: false, kind: 'server', status, message: 'The server had a problem' };
 }
 
-const errorBodySchema = z.object({ error: z.string() });
+type Failure = Extract<TransportResult, { ok: false }>;
+
+/**
+ * Adds what a refusal's body says: the server's code, and with `hero_exists` the account's
+ * hero, which the two-heroes choice shows (D49). A body that doesn't parse adds nothing.
+ */
+export function withRefusal(failure: Failure, body: unknown): Failure {
+  const parsed = syncRefusalSchema.safeParse(body);
+  if (!parsed.success) return failure;
+  const { error: code, hero } = parsed.data;
+  return { ...failure, code, ...(hero ? { hero } : {}) };
+}
 
 /** The sync engine's transport: one POST to the `sync` Edge Function with the session's token. */
 export async function sendSync(request: SyncRequest): Promise<TransportResult> {
@@ -183,10 +194,7 @@ export async function sendSync(request: SyncRequest): Promise<TransportResult> {
   const failure = syncFailure(error);
   // A refusal says why in its body, e.g. `hero_exists` when the account already has a hero.
   if (failure.kind === 'refused' && error instanceof FunctionsHttpError) {
-    const body = errorBodySchema.safeParse(
-      await (error.context as Response).json().catch(() => null),
-    );
-    if (body.success) return { ...failure, code: body.data.error };
+    return withRefusal(failure, await (error.context as Response).json().catch(() => null));
   }
   return failure;
 }

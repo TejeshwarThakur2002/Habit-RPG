@@ -1,4 +1,10 @@
-import type { Change, ServerChange, SyncRequest, SyncResponse } from '@habit-rpg/shared';
+import type {
+  AccountHero,
+  Change,
+  ServerChange,
+  SyncRequest,
+  SyncResponse,
+} from '@habit-rpg/shared';
 
 import type { SyncTransport, TransportResult } from '../sync/engine';
 
@@ -6,7 +12,8 @@ const PROFILE_ID = '00000000-0000-4000-8000-000000000001';
 const AT = '2026-10-24T15:00:00.000Z';
 
 /** `ok` lets a request through, so a later one in the queue can fail. */
-type Failure = 'ok' | 'offline' | 'server' | 'refused' | 'hero-exists' | 'lost-reply';
+type Failure =
+  'ok' | 'offline' | 'server' | 'refused' | 'hero-exists' | 'hero-replaced' | 'lost-reply';
 
 /**
  * An in-memory stand-in for the `sync` Edge Function: it stores what it is sent (idempotent by
@@ -26,11 +33,14 @@ export class FakeSyncServer implements SyncTransport {
     last_closed_date: null,
   };
   pageSize = 500;
+  /** The account's hero as `hero_exists` names it. */
+  accountHero: AccountHero = { hero_name: 'Bea', class: 'rogue', level: 3 };
   /** Called with each request before it is answered, e.g. to change the phone mid-sync. */
   onRequest: (request: SyncRequest) => void = () => {};
   reject: (change: Change) => SyncResponse['rejected'][number]['reason'] | null = () => null;
   private failures: Failure[] = [];
   private seq = 0;
+  private importing = false;
 
   failNext(...kinds: Failure[]): void {
     this.failures.push(...kinds);
@@ -50,8 +60,15 @@ export class FakeSyncServer implements SyncTransport {
     if (failure === 'server') return { ok: false, kind: 'server', status: 500, message: '500' };
     if (failure === 'refused') return { ok: false, kind: 'refused', status: 409, message: '409' };
     if (failure === 'hero-exists') {
-      return { ok: false, kind: 'refused', status: 409, code: 'hero_exists', message: '409' };
+      const hero = this.accountHero;
+      return { ok: false, kind: 'refused', status: 409, code: 'hero_exists', hero, message: '409' };
     }
+    if (failure === 'hero-replaced') {
+      return { ok: false, kind: 'refused', status: 409, code: 'hero_replaced', message: '409' };
+    }
+    // A replacing import starts by deleting the account's rows, as the real one does (D49).
+    if (request.import?.replace && !this.importing) this.rows.clear();
+    if (request.import) this.importing = !request.import.done;
 
     const applied: string[] = [];
     const rejected: SyncResponse['rejected'] = [];
