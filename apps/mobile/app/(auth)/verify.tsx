@@ -5,6 +5,7 @@ import { recordSignIn } from '@/db/queries/local-data';
 import { emailSchema } from '@/features/auth/auth-input';
 import { VerifyView } from '@/features/auth/verify-view';
 import { sendCode, verifyCode } from '@/lib/supabase';
+import { firstSyncNow } from '@/sync/first-sync-runner';
 
 /** `(auth)/verify` (SCOPE.md section 5.3): the code from the email. */
 export default function Verify() {
@@ -21,8 +22,12 @@ export default function Verify() {
       onVerify={async (code) => {
         const result = await verifyCode(email.data, code);
         if (!result.ok) return result.message;
-        // The route guard sees the account and opens onboarding (or the tabs).
-        recordSignIn(db, result.value);
+        // An account that already has a hero brings it down first, so onboarding is skipped
+        // (D48). Offline, onboarding runs and the first sync sorts it out later.
+        const synced = await firstSyncNow(result.value.id);
+        recordSignIn(db, result.value, {
+          heroPulled: synced.status === 'done' && synced.pulledHero,
+        });
         return null;
       }}
       onResend={async () => {
