@@ -26,12 +26,16 @@ let queue: readonly string[] = [];
 const listeners = new Set<Listener>();
 const notify = () => listeners.forEach((listener) => listener());
 
-/** Queues one notice per distinct message: three refused duplicates are one sentence. */
-export function pushRejections(rejected: readonly Rejection[]): void {
-  const fresh = [...new Set(rejected.map(rejectionMessage))].filter((m) => !queue.includes(m));
+/** Queues each message not already waiting: three refused duplicates are one sentence. */
+export function pushNotice(...messages: string[]): void {
+  const fresh = [...new Set(messages)].filter((m) => !queue.includes(m));
   if (fresh.length === 0) return;
   queue = [...queue, ...fresh];
   notify();
+}
+
+export function pushRejections(rejected: readonly Rejection[]): void {
+  pushNotice(...rejected.map(rejectionMessage));
 }
 
 /** The notice on screen, if any. */

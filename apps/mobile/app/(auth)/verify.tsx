@@ -5,7 +5,7 @@ import { recordSignIn } from '@/db/queries/local-data';
 import { emailSchema } from '@/features/auth/auth-input';
 import { VerifyView } from '@/features/auth/verify-view';
 import { sendCode, verifyCode } from '@/lib/supabase';
-import { firstSyncNow } from '@/sync/first-sync-runner';
+import { firstSyncNow } from '@/sync/sync-runner';
 
 /** `(auth)/verify` (SCOPE.md section 5.3): the code from the email. */
 export default function Verify() {

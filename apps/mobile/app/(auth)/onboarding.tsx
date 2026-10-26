@@ -5,7 +5,7 @@ import { createHero } from '@/db/queries/local-data';
 import { getSettings } from '@/db/queries/settings';
 import { OnboardingView } from '@/features/onboarding/onboarding-view';
 import { deviceTimeZone } from '@/lib/device';
-import { firstSyncNow } from '@/sync/first-sync-runner';
+import { firstSyncNow } from '@/sync/sync-runner';
 
 export default function Onboarding() {
   const [detected] = useState(deviceTimeZone);
