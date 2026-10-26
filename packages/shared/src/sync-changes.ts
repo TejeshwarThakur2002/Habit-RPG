@@ -83,10 +83,13 @@ export const changeSchema = z.union([
 /**
  * A linked local hero's history, sent once in time order over several requests (D35, D42).
  * `started_at` is when the hero was made on the phone; the request with `done` ends it.
+ * `replace` is the player's choice to keep this phone's hero when the account already has
+ * one: the server deletes the account's game data first, never the login (D48, D49).
  */
 export const importSchema = z.strictObject({
   started_at: timestamp,
   done: z.boolean(),
+  replace: z.boolean().optional(),
 });
 
 export const syncRequestSchema = z.strictObject({

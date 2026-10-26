@@ -90,6 +90,33 @@ export const syncResponseSchema = z.strictObject({
   ),
 });
 
+/** Why the server refused a whole sync and applied none of it (D42, D49). */
+export const REFUSAL_CODES = [
+  'hero_exists',
+  'hero_replaced',
+  'import_in_progress',
+  'bad_import',
+] as const;
+export type RefusalCode = (typeof REFUSAL_CODES)[number];
+
+/** The account's hero as `hero_exists` describes it, so the phone can show both (D49). */
+export const accountHeroSchema = z.strictObject({
+  hero_name: profileData.shape.hero_name,
+  class: profileData.shape.class,
+  level: z.int().min(1),
+});
+
+/**
+ * The body of any 4xx answer. `error` is one of REFUSAL_CODES or a short message, such as
+ * "Invalid request", which may come with more fields.
+ */
+export const syncRefusalSchema = z.object({
+  error: z.string(),
+  hero: accountHeroSchema.optional(),
+});
+
 export type ServerChange = z.infer<typeof serverChangeSchema>;
 export type SyncResponse = z.infer<typeof syncResponseSchema>;
 export type Character = z.infer<typeof characterSchema>;
+export type AccountHero = z.infer<typeof accountHeroSchema>;
+export type SyncRefusal = z.infer<typeof syncRefusalSchema>;
