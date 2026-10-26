@@ -12,6 +12,7 @@ import {
   getSupabase,
   sendCode,
   syncFailure,
+  withRefusal,
 } from '../supabase';
 
 describe('authErrorMessage', () => {
@@ -73,6 +74,28 @@ describe('syncFailure', () => {
       status: 503,
     });
     warn.mockRestore();
+  });
+});
+
+describe('withRefusal', () => {
+  const refused = { ok: false, kind: 'refused', status: 409, message: '409' } as const;
+
+  it("reads the server's code, and the account's hero when it already has one", () => {
+    const hero = { hero_name: 'Bea', class: 'rogue', level: 3 };
+    expect(withRefusal(refused, { error: 'hero_exists', hero })).toEqual({
+      ...refused,
+      code: 'hero_exists',
+      hero,
+    });
+    expect(withRefusal(refused, { error: 'hero_replaced' })).toEqual({
+      ...refused,
+      code: 'hero_replaced',
+    });
+  });
+
+  it('adds nothing from a body it does not recognise', () => {
+    expect(withRefusal(refused, null)).toEqual(refused);
+    expect(withRefusal(refused, { error: 'hero_exists', hero: { level: 0 } })).toEqual(refused);
   });
 });
 
