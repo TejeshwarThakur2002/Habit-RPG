@@ -5,7 +5,8 @@ import type { SyncTransport, TransportResult } from '../sync/engine';
 const PROFILE_ID = '00000000-0000-4000-8000-000000000001';
 const AT = '2026-10-24T15:00:00.000Z';
 
-type Failure = 'offline' | 'server' | 'refused' | 'lost-reply';
+/** `ok` lets a request through, so a later one in the queue can fail. */
+type Failure = 'ok' | 'offline' | 'server' | 'refused' | 'hero-exists' | 'lost-reply';
 
 /**
  * An in-memory stand-in for the `sync` Edge Function: it stores what it is sent (idempotent by
@@ -48,6 +49,9 @@ export class FakeSyncServer implements SyncTransport {
     if (failure === 'offline') return { ok: false, kind: 'offline', message: 'offline' };
     if (failure === 'server') return { ok: false, kind: 'server', status: 500, message: '500' };
     if (failure === 'refused') return { ok: false, kind: 'refused', status: 409, message: '409' };
+    if (failure === 'hero-exists') {
+      return { ok: false, kind: 'refused', status: 409, code: 'hero_exists', message: '409' };
+    }
 
     const applied: string[] = [];
     const rejected: SyncResponse['rejected'] = [];

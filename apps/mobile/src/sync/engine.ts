@@ -20,7 +20,14 @@ const MAX_ROUNDS = 50;
 export type TransportResult =
   | { ok: true; body: unknown }
   /** offline: no answer at all; server: 5xx; refused: 4xx, which a retry won't fix. */
-  | { ok: false; kind: 'offline' | 'server' | 'refused'; status?: number; message: string };
+  | {
+      ok: false;
+      kind: 'offline' | 'server' | 'refused';
+      status?: number;
+      /** The server's error code, e.g. `hero_exists` (D42). */
+      code?: string;
+      message: string;
+    };
 
 export interface SyncTransport {
   send(request: SyncRequest): Promise<TransportResult>;

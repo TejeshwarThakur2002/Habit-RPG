@@ -6,6 +6,7 @@ import { recordSignIn } from '@/db/queries/local-data';
 import { LOCAL_USER_ID } from '@/db/types';
 import { LinkAccountView } from '@/features/auth/link-account-view';
 import { sendCode, verifyCode } from '@/lib/supabase';
+import { firstSyncNow } from '@/sync/first-sync-runner';
 
 /** `modal/link-account`, opened from Settings for a hero made without an account (D34). */
 export default function LinkAccount() {
@@ -22,6 +23,8 @@ export default function LinkAccount() {
         if (!result.ok) return result.message;
         // Only the account is recorded: the hero, quests and history are left untouched.
         recordSignIn(db, result.value);
+        // The hero and its history go up as an import, in the background (D42, D48).
+        void firstSyncNow(result.value.id);
         router.back();
         return null;
       }}

@@ -58,13 +58,19 @@ export function resetLocalData(db: AppDb): void {
  * in secure storage; these settings let the route guard decide synchronously (D33). Without a
  * hero yet, the route guard then opens onboarding.
  */
-export function recordSignIn(db: AppDb, account: { id: string; email: string }): void {
-  // Linking a local hero (D34) turns "playing without an account" off but keeps every row.
+export function recordSignIn(
+  db: AppDb,
+  account: { id: string; email: string },
+  options: { heroPulled?: boolean } = {},
+): void {
+  // Linking a local hero (D34) turns "playing without an account" off but keeps every row. A
+  // hero just pulled from the account (D48) skips onboarding.
   const flags = {
     accountUserId: account.id,
     accountEmail: account.email,
     demoMode: false,
     localOnly: false,
+    ...(options.heroPulled ? { onboardingDone: true } : {}),
   };
   db.insert(t.settings)
     .values({ id: 1, ...flags })
