@@ -20,6 +20,7 @@ import { getSettings } from '@/db/queries/settings';
 import { useDbQuery } from '@/db/use-db-query';
 import { useReminders } from '@/features/reminders/use-reminders';
 import { useAppArea } from '@/features/session/use-session';
+import { useSyncTriggers } from '@/features/sync/use-sync-triggers';
 
 // Keep the splash screen up until fonts load, so text never flashes in a fallback font.
 void SplashScreen.preventAutoHideAsync();
@@ -59,6 +60,7 @@ function GuardedStack() {
   const area = useAppArea();
   // At the root rather than in the tabs, so signing out clears booked reminders too.
   useReminders();
+  useSyncTriggers();
   // The Reduce Motion choice from Settings reaches every animation.
   const reduceMotion = useDbQuery(() => getSettings(db).reduceMotion);
   return (
