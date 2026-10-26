@@ -82,6 +82,18 @@ describe('syncRequestSchema', () => {
     ).toBe(false);
   });
 
+  it("can ask for the import to replace the account's hero", () => {
+    const replacing = {
+      ...request([profile]),
+      import: { started_at: AT, done: true, replace: true },
+    };
+    expect(syncRequestSchema.parse(replacing).import?.replace).toBe(true);
+    expect(
+      syncRequestSchema.safeParse({ ...replacing, import: { ...replacing.import, replace: 'yes' } })
+        .success,
+    ).toBe(false);
+  });
+
   it('refuses a negative cursor and a device id that is not a UUID', () => {
     expect(syncRequestSchema.safeParse({ ...request([]), cursor: -1 }).success).toBe(false);
     expect(syncRequestSchema.safeParse({ ...request([]), device_id: 'phone' }).success).toBe(false);

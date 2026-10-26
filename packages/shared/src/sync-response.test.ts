@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { syncResponseSchema } from './sync-response.ts';
+import { syncRefusalSchema, syncResponseSchema } from './sync-response.ts';
 
 const ID = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
 const AT = '2026-10-23T14:00:00Z';
@@ -67,5 +67,23 @@ describe('syncResponseSchema', () => {
   it('refuses a hero that breaks the rules, such as negative gold', () => {
     const broken = { ...response, character: { ...response.character, gold: -1 } };
     expect(syncResponseSchema.safeParse(broken).success).toBe(false);
+  });
+});
+
+describe('syncRefusalSchema', () => {
+  it("reads a refusal, with the account's hero when it already has one", () => {
+    const hero = { hero_name: 'Ada', class: 'mage', level: 3 };
+    expect(syncRefusalSchema.parse({ error: 'hero_exists', hero })).toEqual({
+      error: 'hero_exists',
+      hero,
+    });
+    expect(syncRefusalSchema.parse({ error: 'Invalid request', issues: [] }).error).toBe(
+      'Invalid request',
+    );
+  });
+
+  it('refuses a hero that could not exist', () => {
+    const hero = { hero_name: 'Ada', class: 'bard', level: 0 };
+    expect(syncRefusalSchema.safeParse({ error: 'hero_exists', hero }).success).toBe(false);
   });
 });

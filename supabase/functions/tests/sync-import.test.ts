@@ -102,11 +102,14 @@ test("a linked hero's history is rebuilt by the server, day by day", async () =>
   });
 });
 
-test('an import only reaches an account that has no hero yet', async () => {
+test("an import only reaches an account that has no hero yet, and is told the account's", async () => {
   await withUser(async (user) => {
     await send(user, request(0, [profileChange('Ada', TZ)]));
     const res = await send(user, importing([profileChange('Bea', TZ)], true), 409);
-    assertEquals(res, { error: 'hero_exists' });
+    assertEquals(res, {
+      error: 'hero_exists',
+      hero: { hero_name: 'Ada', class: 'mage', level: 1 },
+    });
   });
 });
 

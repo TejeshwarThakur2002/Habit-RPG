@@ -5,7 +5,7 @@ import type { Sql } from 'postgres';
 
 import type { SyncRequest, SyncResponse } from '../_shared/shared/index.ts';
 import { lockPlayer } from '../_server/lock.ts';
-import { checkImport, finishImport } from './import.ts';
+import { checkImport, finishImport, markReplaced, replaceHero } from './import.ts';
 import { pullChanges } from './pull.ts';
 import { pushChanges } from './push.ts';
 import { characterOf } from './rows.ts';
@@ -19,14 +19,18 @@ export async function runSync(
     await lockPlayer(tx, userId);
     // The database's clock, the same one that stamps every row in this transaction.
     const [{ now }] = await tx`select now() as now`;
-    await checkImport(tx, userId, request, now as Date);
+    const replacing = await checkImport(tx, userId, request, now as Date);
+    // The player chose this phone's hero over the account's (D49): out with the old one.
+    const replacedSeq = replacing ? await replaceHero(tx, userId) : null;
+    const imported = request.import && { ...request.import, device_id: request.device_id };
     const { applied, rejected } = await pushChanges(
       tx,
       userId,
       request.changes,
       now as Date,
-      request.import,
+      imported,
     );
+    if (replacedSeq !== null) await markReplaced(tx, userId, replacedSeq);
     if (request.import?.done) await finishImport(tx, userId, now as Date);
     const pulled = await pullChanges(tx, userId, request.cursor);
     const [hero] = await tx`

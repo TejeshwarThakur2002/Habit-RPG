@@ -4,9 +4,9 @@
 import type { TransactionSql } from 'postgres';
 
 import { newHero } from '../_shared/game-core/index.ts';
-import type { Change, SyncRequest, SyncResponse } from '../_shared/shared/index.ts';
+import type { Change, SyncResponse } from '../_shared/shared/index.ts';
 import { closeDays } from '../_server/close-days.ts';
-import { beginImport, changeTime } from './import.ts';
+import { beginImport, changeTime, type ImportRequest } from './import.ts';
 import { pushCompletion } from './push-completions.ts';
 import { pushHabit, type Outcome } from './push-habits.ts';
 import { pushInventory } from './push-inventory.ts';
@@ -52,8 +52,6 @@ async function pushHabitChange(
   return await pushHabit(sql, userId, change);
 }
 
-type Import = SyncRequest['import'];
-
 /**
  * In an import, a change that moves the hero is applied as of when it happened on the phone:
  * the days that had ended by then are closed first, and the completion window is measured
@@ -83,7 +81,7 @@ async function pushChange(
   userId: string,
   change: Change,
   serverNow: Date,
-  imported: Import,
+  imported: ImportRequest | undefined,
 ): Promise<Outcome> {
   let now = serverNow;
   if (imported) {
@@ -94,7 +92,7 @@ async function pushChange(
   switch (change.table) {
     case 'profiles':
       await applyProfile(sql, userId, change);
-      if (imported) await beginImport(sql, userId, imported.started_at);
+      if (imported) await beginImport(sql, userId, imported);
       return { applied: true };
     case 'habits':
       return await pushHabitChange(sql, userId, change);
@@ -110,7 +108,7 @@ export async function pushChanges(
   userId: string,
   changes: readonly Change[],
   now: Date,
-  imported?: Import,
+  imported?: ImportRequest,
 ): Promise<PushResult> {
   const result: PushResult = { applied: [], rejected: [] };
   for (const change of changes) {
