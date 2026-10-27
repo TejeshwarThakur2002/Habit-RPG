@@ -1,11 +1,12 @@
 // One run of the nightly job (SCOPE.md section 9.3): close the finished days of every player
-// who has one, each in their own transaction behind the same lock as `sync`. Boss weeks and
-// boss attacks join this job with parties (P5).
+// who has one, each in their own transaction behind the same lock as `sync`, with the boss's
+// hits for party members; then start this week's bosses and remove long-empty parties (D59).
 
 import type { Sql } from 'postgres';
 
 import { closeDays } from '../_server/close-days.ts';
 import { lockPlayer } from '../_server/lock.ts';
+import { bossAttacks, removeEmptyParties, rolloverBosses } from './parties.ts';
 
 /** Players per run; the rest wait for the next hourly run, oldest unclosed day first. */
 export const MAX_PLAYERS = 500;
@@ -15,6 +16,9 @@ export interface TickResult {
   days: number;
   failed: number;
   has_more: boolean;
+  /** This week's bosses started, and empty parties removed. */
+  bosses: number;
+  parties_removed: number;
 }
 
 /**
@@ -35,12 +39,21 @@ async function duePlayers(sql: Sql): Promise<string[]> {
 export async function runTick(sql: Sql): Promise<TickResult> {
   const [{ now }] = await sql`select now() as now`;
   const due = await duePlayers(sql);
-  const result: TickResult = { players: 0, days: 0, failed: 0, has_more: due.length > MAX_PLAYERS };
+  const result: TickResult = {
+    players: 0,
+    days: 0,
+    failed: 0,
+    has_more: due.length > MAX_PLAYERS,
+    bosses: 0,
+    parties_removed: 0,
+  };
   for (const userId of due.slice(0, MAX_PLAYERS)) {
     try {
       const closed = await sql.begin(async (tx) => {
         await lockPlayer(tx, userId);
-        return await closeDays(tx, userId, now as Date);
+        const dates = await closeDays(tx, userId, now as Date);
+        await bossAttacks(tx, userId, dates);
+        return dates;
       });
       if (closed.length > 0) result.players += 1;
       result.days += closed.length;
@@ -50,5 +63,7 @@ export async function runTick(sql: Sql): Promise<TickResult> {
       console.error('daily-tick: closing failed', userId, e instanceof Error ? e.message : e);
     }
   }
+  result.bosses = await rolloverBosses(sql, now as Date);
+  result.parties_removed = await removeEmptyParties(sql, now as Date);
   return result;
 }
