@@ -6,8 +6,11 @@ select plan(16);
 
 select tables_are(
   'public',
-  array['profiles', 'characters', 'habits', 'completions', 'day_closures', 'inventory', 'character_events'],
-  'the player tables exist'
+  array[
+    'profiles', 'characters', 'habits', 'completions', 'day_closures', 'inventory', 'character_events',
+    'parties', 'party_members', 'boss_weeks', 'party_events', 'boss_claims', 'rate_limits'
+  ],
+  'the player and party tables exist, and no others'
 );
 
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000000a', 'a@test.local');
