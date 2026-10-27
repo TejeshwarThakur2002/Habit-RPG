@@ -7,7 +7,7 @@ import { getCharacter, getProfile } from '@/db/queries/hero';
 import { LOCAL_USER_ID } from '@/db/types';
 import { HeroChoiceView } from '@/features/hero-choice/hero-choice-view';
 import type { FirstSyncOutcome } from '@/sync/first-sync';
-import { firstSyncNow, takeAccountHeroNow } from '@/sync/first-sync-runner';
+import { firstSyncNow, takeAccountHeroNow } from '@/sync/sync-runner';
 import { closeHeroChoice, currentHeroChoice } from '@/sync/hero-choice';
 
 function phoneHero(): AccountHero | null {

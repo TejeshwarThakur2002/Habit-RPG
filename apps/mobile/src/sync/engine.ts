@@ -5,7 +5,7 @@
 // so tests use a fake server (D46).
 
 import { syncResponseSchema, type AccountHero, type SyncRequest } from '@habit-rpg/shared';
-import { asc, count, inArray, sql } from 'drizzle-orm';
+import { asc, count, eq, inArray, sql } from 'drizzle-orm';
 
 import { getSyncState } from '../db/queries/sync-state';
 import { outbox } from '../db/schema';
@@ -84,6 +84,11 @@ function takeBatch(db: AppDb) {
 
 function waiting(db: AppDb): number {
   return db.select({ n: count() }).from(outbox).get()?.n ?? 0;
+}
+
+/** Changes not sent even once: new since the last attempt, which a retry would wait for. */
+function untried(db: AppDb): number {
+  return db.select({ n: count() }).from(outbox).where(eq(outbox.attempts, 0)).get()?.n ?? 0;
 }
 
 export function createSyncEngine(options: SyncEngineOptions) {
@@ -170,7 +175,7 @@ export function createSyncEngine(options: SyncEngineOptions) {
     return running;
   }
 
-  return { syncNow, waiting: () => waiting(db) };
+  return { syncNow, waiting: () => waiting(db), untried: () => untried(db) };
 }
 
 export type SyncEngine = ReturnType<typeof createSyncEngine>;

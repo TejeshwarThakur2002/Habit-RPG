@@ -6,7 +6,7 @@ import { recordSignIn } from '@/db/queries/local-data';
 import { LOCAL_USER_ID } from '@/db/types';
 import { LinkAccountView } from '@/features/auth/link-account-view';
 import { sendCode, verifyCode } from '@/lib/supabase';
-import { firstSyncNow } from '@/sync/first-sync-runner';
+import { firstSyncNow } from '@/sync/sync-runner';
 
 /** `modal/link-account`, opened from Settings for a hero made without an account (D34). */
 export default function LinkAccount() {
