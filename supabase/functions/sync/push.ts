@@ -97,7 +97,7 @@ async function pushChange(
     case 'habits':
       return await pushHabitChange(sql, userId, change);
     case 'completions':
-      return await pushCompletion(sql, userId, change, now);
+      return await pushCompletion(sql, userId, change, now, imported === undefined);
     case 'inventory':
       return await pushInventory(sql, userId, change);
   }

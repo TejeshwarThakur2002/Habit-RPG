@@ -4,6 +4,7 @@
 import type { TransactionSql } from 'postgres';
 
 import {
+  BOSS_VICTORY_GOLD,
   MAX_PARTY_SIZE,
   bossMaxHp,
   generatePartyCode,
@@ -11,6 +12,8 @@ import {
   weekStart,
 } from '../_shared/game-core/index.ts';
 import type { PartyRefusal } from '../_shared/shared/index.ts';
+import { changeHero, loadHero } from '../_server/hero.ts';
+import { lockPlayer } from '../_server/lock.ts';
 import { activePartyId } from './state.ts';
 
 /** An action the rules don't allow, answered with this status and code. */
@@ -88,4 +91,40 @@ export async function leaveParty(sql: TransactionSql, userId: string) {
     where party_id = ${partyId} and user_id = ${userId}`;
   await sql`
     insert into public.party_events (party_id, user_id, kind) values (${partyId}, ${userId}, 'leave')`;
+}
+
+/**
+ * +50 gold for a defeated boss, once per player (section 9.2). Anyone who was an active member
+ * when it fell may claim, even after the next week's boss is up (D58). The gold goes through
+ * the hero's event log, behind the player's lock, so it lines up with their syncs.
+ */
+export async function claimReward(sql: TransactionSql, userId: string, bossWeekId: string) {
+  const [boss] = await sql`
+    select b.party_id, b.defeated_at, m.joined_at, m.left_at
+    from public.boss_weeks b
+    left join public.party_members m on m.party_id = b.party_id and m.user_id = ${userId}
+    where b.id = ${bossWeekId}`;
+  if (!boss || boss.joined_at === null) throw new PartyRefusedError(404, 'not_found');
+  if (boss.defeated_at === null) throw new PartyRefusedError(409, 'not_defeated');
+  const fell = boss.defeated_at as Date;
+  const memberThen =
+    (boss.joined_at as Date) <= fell && (boss.left_at === null || (boss.left_at as Date) > fell);
+  if (!memberThen) throw new PartyRefusedError(409, 'not_in_party');
+
+  await lockPlayer(sql, userId);
+  const claimed = await sql`
+    insert into public.boss_claims (boss_week_id, user_id) values (${bossWeekId}, ${userId})
+    on conflict do nothing returning user_id`;
+  if (claimed.length === 0) throw new PartyRefusedError(409, 'already_claimed');
+  const state = await loadHero(sql, userId);
+  if (!state) throw new PartyRefusedError(409, 'no_hero');
+  const after = { ...state.hero, gold: state.hero.gold + BOSS_VICTORY_GOLD };
+  // One reward per player and boss: the ref names both (character_events is unique on it).
+  await changeHero(
+    sql,
+    userId,
+    { kind: 'boss_reward', ref: `${userId}:${bossWeekId}` },
+    state.hero,
+    after,
+  );
 }

@@ -6,7 +6,7 @@ import { withSupabase } from '@supabase/server';
 import postgres from 'postgres';
 
 import { partyRequestSchema, type PartyRequest } from '../_shared/shared/index.ts';
-import { PartyRefusedError, createParty, joinParty, leaveParty } from './actions.ts';
+import { PartyRefusedError, claimReward, createParty, joinParty, leaveParty } from './actions.ts';
 import { countCall } from './rate-limit.ts';
 import { partyState } from './state.ts';
 
@@ -29,6 +29,7 @@ async function run(userId: string, request: PartyRequest) {
     if (request.action === 'create') await createParty(tx, userId, request.name, now as Date);
     if (request.action === 'join') await joinParty(tx, userId, request.code);
     if (request.action === 'leave') await leaveParty(tx, userId);
+    if (request.action === 'claim_reward') await claimReward(tx, userId, request.boss_week_id);
     return await partyState(tx, userId, now as Date);
   });
 }

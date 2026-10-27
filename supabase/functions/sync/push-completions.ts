@@ -14,6 +14,7 @@ import {
   xpBonusFor,
 } from '../_shared/game-core/index.ts';
 import type { Change } from '../_shared/shared/index.ts';
+import { healBoss, hitBoss } from '../_server/boss.ts';
 import { voidPenalty } from '../_server/close-days.ts';
 import { loadHabit, type ServerHabit } from '../_server/habits.ts';
 import { changeHero, loadHero, loadStats } from '../_server/hero.ts';
@@ -33,6 +34,7 @@ interface StoredCompletion {
  */
 async function undo(sql: TransactionSql, userId: string, row: StoredCompletion, at: string) {
   await sql`update public.completions set undone_at = ${at} where id = ${row.id}`;
+  await healBoss(sql, row.id);
   const state = await loadHero(sql, userId);
   if (!state) return;
   const { hero } = applyXp(state.hero, -row.xp_awarded, state.hero.hp);
@@ -54,11 +56,13 @@ async function pushKnown(
   return { applied: true };
 }
 
+/** `live` is false for an imported history, which never hits the party's boss (D58). */
 export async function pushCompletion(
   sql: TransactionSql,
   userId: string,
   change: CompletionChange,
   now: Date,
+  live: boolean,
 ): Promise<Outcome> {
   const { id } = change;
   const d = change.data;
@@ -92,7 +96,7 @@ export async function pushCompletion(
     await undo(sql, userId, rival as never, now.toISOString());
   }
 
-  await applyNewCompletion(sql, userId, change, habit);
+  await applyNewCompletion(sql, userId, change, habit, live);
   return { applied: true };
 }
 
@@ -101,6 +105,7 @@ async function applyNewCompletion(
   userId: string,
   change: CompletionChange,
   habit: ServerHabit,
+  live: boolean,
 ): Promise<void> {
   const d = change.data;
   // Rivals may have been undone just now, so the hero is read fresh.
@@ -136,4 +141,12 @@ async function applyNewCompletion(
   const next = { ...hero, gold: hero.gold + reward.gold };
   await changeHero(sql, userId, { kind: 'complete', ref: change.id }, state.hero, next);
   if (isLate) await voidPenalty(sql, userId, d.local_date, habit.id);
+  if (live) {
+    await hitBoss(sql, userId, {
+      completionId: change.id,
+      localDate: d.local_date,
+      damage: reward.bossDamage,
+      habitId: habit.id,
+    });
+  }
 }

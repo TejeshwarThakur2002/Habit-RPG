@@ -59,12 +59,14 @@ export async function newAccount(): Promise<TestAccount> {
     headers: { ...admin, 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, email_confirm: true }),
   });
+  if (!created.ok) throw new Error(`Creating a test account failed: ${created.status}`);
   const { id } = (await created.json()) as { id: string };
   const session = await fetch(`${stack.API_URL}/auth/v1/token?grant_type=password`, {
     method: 'POST',
     headers: { apikey: stack.ANON_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
+  if (!session.ok) throw new Error(`Signing the test account in failed: ${session.status}`);
   const { access_token: token } = (await session.json()) as { access_token: string };
   return { id, token };
 }
