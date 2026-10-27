@@ -118,13 +118,11 @@ describe('SettingsView', () => {
     expect(screen.queryByRole('button', { name: 'Delete account' })).toBeNull();
   });
 
-  it('shows the signed-in email and that the hero is not synced yet', async () => {
+  it('shows the signed-in email and that the hero syncs to it', async () => {
     const { onSignOut } = await setup('account');
     expect(screen.queryByRole('button', { name: 'Link an account' })).toBeNull();
     expect(screen.getByText(/Signed in as ada@example.com/)).toBeOnTheScreen();
-    expect(
-      screen.getByText(/syncing it to your account comes in a later update/),
-    ).toBeOnTheScreen();
+    expect(screen.getByText(/syncs to your account whenever you're online/)).toBeOnTheScreen();
     await fireEvent.press(button('Sign out'));
     expect(onSignOut).toHaveBeenCalledTimes(1);
   });

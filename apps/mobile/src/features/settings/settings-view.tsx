@@ -51,9 +51,8 @@ function accountCopy(mode: AccountMode, email: string | null) {
     };
   }
   if (mode === 'account') {
-    // Honest until sync arrives (P4): the hero is still only on this phone.
     return {
-      text: `Signed in as ${email ?? 'your email'}. Your hero is saved on this phone; syncing it to your account comes in a later update.`,
+      text: `Signed in as ${email ?? 'your email'}. Your hero is saved on this phone and syncs to your account whenever you're online.`,
       button: 'Sign out',
     };
   }
