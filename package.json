@@ -22,7 +22,8 @@
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
-    "db:test": "supabase test db"
+    "db:test": "supabase test db",
+    "sync:test": "mkdir -p supabase/.temp && supabase status -o env > supabase/.temp/functions-test.env 2>/dev/null; pnpm --filter @habit-rpg/mobile exec jest -c jest.sync.config.js"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",

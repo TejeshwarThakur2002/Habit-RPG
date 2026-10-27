@@ -102,6 +102,10 @@ jobs:
 
       - run: pnpm functions:test
 
+      # Two phones on sql.js against the real sync function, 50 random runs, and the first sync
+      # end to end (D53). The P4 done criterion: no completion lost or duplicated.
+      - run: pnpm sync:test
+
       - if: failure()
         run: cat functions.log || true
 
