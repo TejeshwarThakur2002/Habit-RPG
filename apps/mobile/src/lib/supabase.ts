@@ -1,4 +1,10 @@
-import { syncRefusalSchema, type SyncRequest } from '@habit-rpg/shared';
+import {
+  partyStateSchema,
+  syncRefusalSchema,
+  type PartyRequest,
+  type PartyState,
+  type SyncRequest,
+} from '@habit-rpg/shared';
 import {
   AuthError,
   FunctionsFetchError,
@@ -10,6 +16,7 @@ import { AppState } from 'react-native';
 import { z } from 'zod';
 
 import type { TransportResult } from '../sync/engine';
+import { simulatedOffline } from '../sync/offline-switch';
 
 import { largeSecureStore } from './large-secure-store';
 
@@ -197,4 +204,50 @@ export async function sendSync(request: SyncRequest): Promise<TransportResult> {
     return withRefusal(failure, await (error.context as Response).json().catch(() => null));
   }
   return failure;
+}
+
+const PARTY_MESSAGES: Record<string, string> = {
+  not_found: 'No party has that code. Check it and try again.',
+  party_full: 'That party is full: 4 members at most.',
+  already_in_party: "You're already in a party.",
+  not_in_party: "You're not in that party any more.",
+  no_hero: 'Make your hero first.',
+  rate_limited: 'Too many tries. Wait a minute and try again.',
+  not_defeated: "The boss isn't defeated yet.",
+  already_claimed: "You've already claimed this reward.",
+};
+
+/** What the player is told when a party action doesn't go through (SCOPE.md section 9.2). */
+export function partyErrorMessage(code: string | null, offline: boolean): string {
+  if (offline) return 'You need to be online to do this.';
+  return (code && PARTY_MESSAGES[code]) ?? 'Something went wrong. Try again.';
+}
+
+export type PartyResult = { ok: true; state: PartyState } | { ok: false; message: string };
+
+/** One `party` action, online only (D57); the answer is always the party snapshot. */
+export async function callParty(request: PartyRequest): Promise<PartyResult> {
+  const supabase = getSupabase();
+  if (!supabase) return { ok: false, message: "Parties aren't set up in this build" };
+  if (simulatedOffline()) return { ok: false, message: partyErrorMessage(null, true) };
+  const { data, error } = await supabase.functions.invoke('party', { body: request });
+  if (!error) {
+    const parsed = partyStateSchema.safeParse(data);
+    if (parsed.success) return { ok: true, state: parsed.data };
+    console.warn('party: the server sent an unexpected answer', parsed.error.issues);
+    return { ok: false, message: partyErrorMessage(null, false) };
+  }
+  if (error instanceof FunctionsFetchError) {
+    return { ok: false, message: partyErrorMessage(null, true) };
+  }
+  const body: unknown =
+    error instanceof FunctionsHttpError
+      ? await (error.context as Response).json().catch(() => null)
+      : null;
+  const refusal = syncRefusalSchema.safeParse(body);
+  if (!refusal.success) console.warn('party failed', error);
+  return {
+    ok: false,
+    message: partyErrorMessage(refusal.success ? refusal.data.error : null, false),
+  };
 }

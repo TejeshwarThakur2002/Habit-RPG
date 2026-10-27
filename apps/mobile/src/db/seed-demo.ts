@@ -129,15 +129,22 @@ function seedDemoParty(
 ): void {
   const partyId = o.newId();
   const bossWeekId = o.newId();
+  // Their damage adds up to what the boss has lost: 2,000 - 1,240.
   const members = [
-    { userId: o.userId, heroName: 'Sir Commit', heroClass: 'knight' as const },
-    { userId: 'demo-ravi', heroName: 'Mage Ravi', heroClass: 'mage' as const },
-    { userId: 'demo-nia', heroName: 'Archer Nia', heroClass: 'rogue' as const },
-    { userId: 'demo-jay', heroName: 'Bard Jay', heroClass: 'mage' as const },
+    { userId: o.userId, heroName: 'Sir Commit', heroClass: 'knight' as const, damage: 240 },
+    { userId: 'demo-ravi', heroName: 'Mage Ravi', heroClass: 'mage' as const, damage: 280 },
+    { userId: 'demo-nia', heroName: 'Archer Nia', heroClass: 'rogue' as const, damage: 160 },
+    { userId: 'demo-jay', heroName: 'Bard Jay', heroClass: 'mage' as const, damage: 80 },
   ];
 
   tx.insert(t.parties)
-    .values({ id: partyId, name: 'The Night Owls', code: 'K7M2QX', timezone: o.timeZone })
+    .values({
+      id: partyId,
+      name: 'The Night Owls',
+      code: 'K7M2QX',
+      timezone: o.timeZone,
+      fetchedAt: o.stamp,
+    })
     .run();
   tx.insert(t.partyMembers)
     .values(members.map((m) => ({ ...m, partyId, joinedAt: o.stamp })))
