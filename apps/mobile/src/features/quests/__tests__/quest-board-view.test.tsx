@@ -52,12 +52,20 @@ async function show(b: QuestBoard, extra: Partial<QuestBoardViewProps> = {}) {
     onAdd: jest.fn(),
     onEdit: jest.fn(),
     onReorder: jest.fn(),
+    onOpenSync: jest.fn(),
   };
-  await render(<QuestBoardView board={b} {...handlers} {...extra} />);
+  const sync = { status: 'synced' as const, waiting: 0 };
+  await render(<QuestBoardView board={b} sync={sync} {...handlers} {...extra} />);
   return handlers;
 }
 
 describe('QuestBoardView', () => {
+  it('shows the sync status in the pill, which opens the sync card', async () => {
+    const { onOpenSync } = await show(board(), { sync: { status: 'offline', waiting: 3 } });
+    await fireEvent.press(screen.getByRole('button', { name: 'Offline · 3 waiting' }));
+    expect(onOpenSync).toHaveBeenCalledTimes(1);
+  });
+
   it('shows the hero, bars and progress like the design', async () => {
     await show(board());
     expect(screen.getByRole('header', { name: 'Quest Board' })).toBeOnTheScreen();
@@ -66,7 +74,7 @@ describe('QuestBoardView', () => {
     expect(screen.getByText('340 / 500')).toBeOnTheScreen();
     expect(screen.getByText('12-day streak')).toBeOnTheScreen();
     expect(screen.getByText('1 of 2 done')).toBeOnTheScreen();
-    expect(screen.getByText('Saved on this phone')).toBeOnTheScreen();
+    expect(screen.getByText('Synced · works offline')).toBeOnTheScreen();
   });
 
   it('toggles a quest, passing whether it was done', async () => {

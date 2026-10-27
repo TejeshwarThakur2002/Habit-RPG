@@ -9,27 +9,40 @@ import {
   spacing,
   type,
 } from '@habit-rpg/ui';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { ScrollView, StyleSheet, Text, View, type ScrollViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Stats } from '@/db/queries/stats';
+import type { SyncDisplay } from '@/features/sync/sync-display';
 
 import { Card } from './card';
 import { QuestRates } from './quest-rates';
+import { SyncCard } from './sync-card';
 
 export interface StatsViewProps {
   stats: Stats;
-  demo: boolean;
+  sync: SyncDisplay;
+  /** Opened from the sync pill: scroll down to the sync card. */
+  focusSync?: boolean;
+  onSyncAction: () => void;
   onEditHabit: (habitId: string) => void;
   onOpenSettings: () => void;
 }
 
 /** "Adventure Log" (SCOPE.md section 5.7). */
-export function StatsView({ stats, demo, onEditHabit, onOpenSettings }: StatsViewProps) {
+export function StatsView(props: StatsViewProps) {
+  const { stats, sync, focusSync, onSyncAction, onEditHabit, onOpenSettings } = props;
   const insets = useSafeAreaInsets();
+  const scroll = useRef<ScrollViewInstance>(null);
+  // The sync card is last on the screen.
+  useEffect(() => {
+    if (focusSync) scroll.current?.scrollToEnd({ animated: true });
+  }, [focusSync]);
   const month = stats.monthPercent === null ? '–' : `${stats.monthPercent}%`;
   return (
     <ScrollView
+      ref={scroll}
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
     >
@@ -59,17 +72,7 @@ export function StatsView({ stats, demo, onEditHabit, onOpenSettings }: StatsVie
 
       <QuestRates rates={stats.habitRates} onEditHabit={onEditHabit} />
 
-      <Card>
-        <View style={styles.syncRow}>
-          <View style={styles.dot} />
-          <Text style={type.bodyStrong}>Saved on this phone</Text>
-        </View>
-        <Text style={type.secondary}>
-          {demo
-            ? 'Demo data stays on this phone and is never synced.'
-            : 'Playing without an account. Your progress will sync once you sign in.'}
-        </Text>
-      </Card>
+      <SyncCard display={sync} onAction={onSyncAction} />
     </ScrollView>
   );
 }
@@ -97,6 +100,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   tileValue: { ...type.name, fontSize: 24 },
-  syncRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.teal },
 });
