@@ -36,6 +36,13 @@
       "when": 1792743385158,
       "tag": "0004_add_account_setting",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1793088282334,
+      "tag": "0005_party_snapshot",
+      "breakpoints": true
     }
   ]
 }
