@@ -34,6 +34,8 @@ export interface SettingsViewProps {
   onLinkAccount: () => void;
   /** Opens "Delete account", for a signed-in player (F10). */
   onDeleteAccount: () => void;
+  /** Development builds only: opens the sync outbox screen (D54). */
+  onOpenDeveloper?: () => void;
   onClose: () => void;
 }
 
@@ -116,6 +118,12 @@ export function SettingsView(props: SettingsViewProps) {
       <Section title="About">
         <Text style={type.secondary}>Habit RPG version {props.version}</Text>
       </Section>
+
+      {props.onOpenDeveloper && (
+        <Section title="Developer">
+          <Button label="Sync outbox" variant="secondary" onPress={props.onOpenDeveloper} />
+        </Section>
+      )}
     </ScrollView>
   );
 }

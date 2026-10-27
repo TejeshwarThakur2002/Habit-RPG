@@ -62,6 +62,7 @@ export default function Settings() {
       }
       onLinkAccount={() => router.push('/modal/link-account')}
       onDeleteAccount={() => router.push('/modal/delete-account')}
+      onOpenDeveloper={__DEV__ ? () => router.push('/dev/outbox') : undefined}
       onClose={() => router.back()}
     />
   );

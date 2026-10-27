@@ -87,6 +87,7 @@ function GuardedStack() {
         </Stack.Protected>
         <Stack.Protected guard={__DEV__}>
           <Stack.Screen name="dev/gallery" />
+          <Stack.Screen name="dev/outbox" options={{ presentation: 'modal' }} />
         </Stack.Protected>
       </Stack>
     </ReduceMotionProvider>

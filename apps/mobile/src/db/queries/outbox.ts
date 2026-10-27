@@ -4,7 +4,7 @@
 // a hero kept only on this phone is uploaded from its tables when it is linked (D42, D45).
 
 import type { Change } from '@habit-rpg/shared';
-import { and, count, eq } from 'drizzle-orm';
+import { and, asc, count, eq } from 'drizzle-orm';
 
 import { outbox, type completions, type habits, type inventory } from '../schema';
 import type { AppDb } from '../types';
@@ -12,6 +12,11 @@ import type { Profile } from './hero';
 import { getSettings } from './settings';
 
 const iso = (ms: number) => new Date(ms).toISOString();
+
+/** The outbox in the order it is sent, for the dev outbox screen (D54). */
+export function listOutbox(db: AppDb) {
+  return db.select().from(outbox).orderBy(asc(outbox.id)).all();
+}
 
 /** Changes the server hasn't settled yet: "N waiting" in the sync pill and card. */
 export function countWaiting(db: AppDb): number {
