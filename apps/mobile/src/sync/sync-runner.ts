@@ -9,11 +9,12 @@ import { newId } from '@/lib/device';
 import { sendSync } from '@/lib/supabase';
 
 import type { FirstSyncChoice, FirstSyncOutcome } from './first-sync';
+import { withOfflineSwitch } from './offline-switch';
 import { createSyncService } from './sync-service';
 
 export const syncService = createSyncService({
   db,
-  transport: { send: sendSync },
+  transport: withOfflineSwitch({ send: sendSync }),
   appVersion: Constants.expoConfig?.version ?? 'unknown',
   newId,
   now: Date.now,

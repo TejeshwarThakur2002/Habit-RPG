@@ -32,6 +32,15 @@ async function setup(mode: AccountMode = 'local', deviceTimeZone = 'America/Toro
 const button = (name: string) => screen.getByRole('button', { name });
 
 describe('SettingsView', () => {
+  it('offers the sync outbox only when a developer screen is passed in', async () => {
+    const { rerender, ...props } = await setup('account');
+    expect(screen.queryByRole('button', { name: 'Sync outbox' })).toBeNull();
+    const onOpenDeveloper = jest.fn();
+    await rerender(<SettingsView {...props} onOpenDeveloper={onOpenDeveloper} />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Sync outbox' }));
+    expect(onOpenDeveloper).toHaveBeenCalledTimes(1);
+  });
+
   it('starts the hero form again when another hero takes over the phone', async () => {
     const { rerender, ...props } = await setup('account');
     await fireEvent.changeText(screen.getByLabelText('Hero name'), 'Half typed');
