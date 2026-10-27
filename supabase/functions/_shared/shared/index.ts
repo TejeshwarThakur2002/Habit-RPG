@@ -5,3 +5,4 @@
 export * from './sync-changes.ts';
 export * from './sync-response.ts';
 export * from './text.ts';
+export * from './party.ts';
