@@ -59,6 +59,8 @@ pnpm functions:serve      # serve Edge Functions locally; first stores a local C
                           # supabase/functions/.env and Vault (rerun after a db reset)
 pnpm functions:test       # Deno tests for Edge Functions; the integration tests call the
                           # running functions, so start `pnpm functions:serve` first
+pnpm sync:test            # two phones vs the running sync function, 50 random runs
+                          # (SEED=<n> RUNS=1 replays one); needs functions:serve too
 ```
 
 Add Expo packages to the app with `npx expo install <pkg>` (run inside `apps/mobile`) so versions
