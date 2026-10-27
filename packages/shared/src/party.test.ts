@@ -25,10 +25,14 @@ describe('partyRequestSchema', () => {
     expect(partyRequestSchema.safeParse({ action: 'join', code: 'K7M2QI' }).success).toBe(false);
   });
 
-  it('knows only its four actions, with nothing extra', () => {
+  it('knows only its five actions, with nothing extra', () => {
     expect(partyRequestSchema.safeParse({ action: 'leave' }).success).toBe(true);
     expect(partyRequestSchema.safeParse({ action: 'state' }).success).toBe(true);
+    expect(partyRequestSchema.safeParse({ action: 'claim_reward', boss_week_id: ID }).success).toBe(
+      true,
+    );
     expect(partyRequestSchema.safeParse({ action: 'claim_reward' }).success).toBe(false);
+    expect(partyRequestSchema.safeParse({ action: 'kick', user_id: ID }).success).toBe(false);
     expect(partyRequestSchema.safeParse({ action: 'leave', user_id: ID }).success).toBe(false);
   });
 });

@@ -29,6 +29,8 @@ export const partyRequestSchema = z.discriminatedUnion('action', [
   z.strictObject({ action: z.literal('leave') }),
   /** The current snapshot, with no change (D56). */
   z.strictObject({ action: z.literal('state') }),
+  /** +50 gold for a defeated boss, once (D58). */
+  z.strictObject({ action: z.literal('claim_reward'), boss_week_id: uuid }),
 ]);
 
 export const PARTY_REFUSALS = [
@@ -38,6 +40,8 @@ export const PARTY_REFUSALS = [
   'not_in_party',
   'no_hero',
   'rate_limited',
+  'not_defeated',
+  'already_claimed',
 ] as const;
 export type PartyRefusal = (typeof PARTY_REFUSALS)[number];
 
