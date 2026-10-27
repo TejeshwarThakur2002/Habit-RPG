@@ -10,18 +10,19 @@ and licences: [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Current phase
 
-**P3 Backend and auth is complete** (DECISIONS.md D31 to D44); tag `v0.2.0` with the owner's OK.
-**P4 Offline sync engine is next**: restate its task list (SCOPE.md section 11) and wait for the
+**P4 Offline sync engine is complete** (DECISIONS.md D45 to D55); tag `v0.3.0` with the owner's
+OK. **P5 Party and boss is next**: restate its task list (SCOPE.md section 11) and wait for the
 owner's go-ahead before starting.
 
-P3 delivered the backend: game-core shared with Edge Functions as a checked copy (D31); the
-player tables with read-only RLS and pgTAP tests (D32); email-code sign-in and linking a local
-hero (D33, D34); the `sync` function with a server-authoritative hero and event log (D35 to
-D39); the server day close, `daily-tick` and its hourly `pg_cron` call (D40, D41); importing a
-linked hero by server replay (D42); `delete-account` with Settings "Delete account" (D43); and
-a scripted round trip (D44). The phone doesn't sync yet: its outbox and sync engine are P4.
-Still deferred, the owner's call: the hosted Supabase project in ca-central-1 with Resend SMTP,
-and the `e2e.yml` CI workflow (needs a development build). Also open: `docs/PRIVACY.md`.
+P4 made the phone sync: an outbox written with every change while signed in (D45); the sync
+engine with batches, a cursor and backoff (D46); refused changes rolled back with a toast (D47);
+the first sync for an account, importing a phone's hero or pulling the account's (D48), and the
+two-heroes choice with the server's `replace` and `hero_replaced` (D49, D50); one sync service
+with its triggers, including `expo-network` reconnect (D51); the sync status in the pill and the
+Stats card (D52); the two-phone test, 50 random runs against the real function in CI (D53); and a
+dev-only outbox screen with "Simulate offline" (D54). Still deferred, the owner's call: the hosted
+Supabase project in ca-central-1 with Resend SMTP, and the `e2e.yml` CI workflow (needs a
+development build). Also open: `docs/PRIVACY.md`.
 
 On this Mac the Android emulator renders black with its default GPU mode; start it with
 `emulator -avd Medium_Phone_API_37.0 -gpu swiftshader_indirect`.
