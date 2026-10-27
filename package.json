@@ -15,7 +15,7 @@
     "test": "pnpm -r test",
     "e2e": "pnpm --filter @habit-rpg/mobile e2e",
     "functions:shared": "node scripts/copy-functions-shared.mjs",
-    "functions:check": "node scripts/copy-functions-shared.mjs --check && deno lint supabase/functions && deno check --config supabase/functions/tests/deno.json supabase/functions/tests supabase/functions/_shared && deno check --config supabase/functions/sync/deno.json supabase/functions/sync && deno check --config supabase/functions/daily-tick/deno.json supabase/functions/daily-tick && deno check --config supabase/functions/delete-account/deno.json supabase/functions/delete-account",
+    "functions:check": "node scripts/copy-functions-shared.mjs --check && deno lint supabase/functions && deno check --config supabase/functions/tests/deno.json supabase/functions/tests supabase/functions/_shared && deno check --config supabase/functions/sync/deno.json supabase/functions/sync && deno check --config supabase/functions/daily-tick/deno.json supabase/functions/daily-tick && deno check --config supabase/functions/delete-account/deno.json supabase/functions/delete-account && deno check --config supabase/functions/party/deno.json supabase/functions/party",
     "functions:serve": "node scripts/functions-env.mjs && supabase functions serve",
     "functions:test": "node scripts/functions-env.mjs && mkdir -p supabase/.temp && supabase status -o env > supabase/.temp/functions-test.env 2>/dev/null; deno test --allow-read --allow-env --allow-net --env-file=supabase/.temp/functions-test.env --env-file=supabase/functions/.env --config supabase/functions/tests/deno.json supabase/functions/tests",
     "prepare": "husky",
