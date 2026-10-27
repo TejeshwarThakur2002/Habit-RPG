@@ -3,6 +3,7 @@ import {
   MIN_TOUCH,
   ScreenHeader,
   SyncPill,
+  type SyncStatus,
   borders,
   colors,
   fonts,
@@ -31,13 +32,16 @@ export interface QuestBoardViewProps {
   onEdit: (habitId: string) => void;
   /** Saves today's quests in a new order (drag handle or "Move up" / "Move down"). */
   onReorder: (habitIds: string[]) => void;
+  /** The sync pill: its state, changes waiting, and opening the Stats sync card. */
+  sync: { status: SyncStatus; waiting: number };
+  onOpenSync: () => void;
   /** The latest completion's rewards, floated up from its row. */
   lastReward?: LastReward | null;
 }
 
 /** The Quests tab (SCOPE.md section 5.4). */
 export function QuestBoardView(props: QuestBoardViewProps) {
-  const { board, onToggle, onOpenParty, onAdd, onEdit, onReorder, lastReward } = props;
+  const { board, onToggle, onOpenParty, onAdd, onEdit, onReorder, lastReward, sync } = props;
   const insets = useSafeAreaInsets();
   const doneCount = board.today.filter((q) => q.doneToday).length;
   const allDone = board.today.length > 0 && doneCount === board.today.length;
@@ -48,7 +52,10 @@ export function QuestBoardView(props: QuestBoardViewProps) {
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
     >
-      <ScreenHeader title="Quest Board" right={<SyncPill status="local" />} />
+      <ScreenHeader
+        title="Quest Board"
+        right={<SyncPill status={sync.status} waiting={sync.waiting} onPress={props.onOpenSync} />}
+      />
       <HeroCard board={board} />
 
       {noQuests ? (

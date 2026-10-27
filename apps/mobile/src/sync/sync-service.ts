@@ -30,6 +30,9 @@ export type SyncServiceOptions = Required<Pick<SyncEngineOptions, 'setTimer' | '
 /** Changes are sent this long after the last one, so a burst of taps goes in one request. */
 export const WRITE_DELAY_MS = 2000;
 
+/** The activity's message while the two-heroes choice waits for the player (D50). */
+export const HERO_CHOICE_PENDING = 'Choose which hero to keep';
+
 export const HERO_REPLACED_NOTICE =
   "Your account's hero was replaced from another phone, so this phone now has it too.";
 
@@ -69,7 +72,7 @@ export function createSyncService(o: SyncServiceOptions) {
       publish({ state: 'idle', message: null });
     } else if (outcome.status === 'conflict') {
       askHeroChoice({ accountUserId, accountHero: outcome.accountHero });
-      publish({ state: 'error', message: 'Choose which hero to keep' });
+      publish({ state: 'error', message: HERO_CHOICE_PENDING });
     } else {
       publish({ state: outcome.status, message: outcome.message });
     }

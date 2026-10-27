@@ -7,11 +7,13 @@ import { db } from '@/db/client';
 import { completeHabit, undoCompletion } from '@/db/queries/completions';
 import { reorderHabits } from '@/db/queries/habits';
 import { getCharacter, getProfile } from '@/db/queries/hero';
+import { countWaiting } from '@/db/queries/outbox';
 import { getQuestBoard } from '@/db/queries/quest-board';
 import { LOCAL_USER_ID } from '@/db/types';
 import { useDbQuery } from '@/db/use-db-query';
 import { LevelUpModal, type LevelUp } from '@/features/quests/level-up-modal';
 import { QuestBoardView } from '@/features/quests/quest-board-view';
+import { useSyncDisplay } from '@/features/sync/use-sync-display';
 import type { LastReward } from '@/features/quests/today-list';
 import { newId } from '@/lib/device';
 import { haptics } from '@/lib/haptics';
@@ -24,6 +26,8 @@ function readBoard() {
 
 export default function Quests() {
   const board = useDbQuery(readBoard);
+  const sync = useSyncDisplay();
+  const waiting = useDbQuery(() => countWaiting(db));
   const [lastReward, setLastReward] = useState<LastReward | null>(null);
   const [levelUp, setLevelUp] = useState<LevelUp | null>(null);
   // The route guard only opens the tabs once a hero exists, so this is a brief edge case.
@@ -55,6 +59,8 @@ export default function Quests() {
         board={board}
         lastReward={lastReward}
         onToggle={toggle}
+        sync={{ status: sync.pill, waiting }}
+        onOpenSync={() => router.navigate({ pathname: '/stats', params: { show: 'sync' } })}
         onOpenParty={() => router.navigate('/party')}
         onAdd={() => router.push('/modal/habit/new')}
         onEdit={(habitId) =>

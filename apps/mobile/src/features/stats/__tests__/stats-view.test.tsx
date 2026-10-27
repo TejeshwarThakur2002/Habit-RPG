@@ -4,6 +4,8 @@ import type { Stats } from '@/db/queries/stats';
 import { colors } from '@habit-rpg/ui';
 
 import { rateColor } from '../quest-rates';
+import type { SyncDisplay } from '@/features/sync/sync-display';
+
 import { StatsView } from '../stats-view';
 
 const stats: Stats = {
@@ -18,8 +20,21 @@ const stats: Stats = {
   ],
 };
 
-async function show(demo = false) {
-  const props = { stats, demo, onEditHabit: jest.fn(), onOpenSettings: jest.fn() };
+const local: SyncDisplay = {
+  pill: 'local',
+  title: 'Saved on this phone',
+  detail: 'Playing without an account. Your progress will sync once you sign in.',
+  action: null,
+};
+
+async function show(sync: SyncDisplay = local) {
+  const props = {
+    stats,
+    sync,
+    onSyncAction: jest.fn(),
+    onEditHabit: jest.fn(),
+    onOpenSettings: jest.fn(),
+  };
   await render(<StatsView {...props} />);
   return props;
 }
@@ -36,11 +51,21 @@ describe('StatsView', () => {
     expect(screen.getByText(/Your progress will sync once you sign in/)).toBeOnTheScreen();
   });
 
-  it('says demo data never syncs', async () => {
-    await show(true);
-    expect(
-      screen.getByText('Demo data stays on this phone and is never synced.'),
-    ).toBeOnTheScreen();
+  it("shows the sync card's state, and its button syncs", async () => {
+    const { onSyncAction } = await show({
+      pill: 'offline',
+      title: 'Offline · 3 changes waiting',
+      detail: "Saved on your phone. Syncs when you're back online.",
+      action: 'Retry',
+    });
+    expect(screen.getByRole('header', { name: 'Offline · 3 changes waiting' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Retry' }));
+    expect(onSyncAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('has no sync button when there is nothing to sync', async () => {
+    await show();
+    expect(screen.queryByRole('button', { name: /Retry|Sync now/ })).toBeNull();
   });
 
   it("opens a quest's streak and links to editing it", async () => {
