@@ -18,3 +18,17 @@ export async function runPartyAction(db: AppDb, request: PartyRequest): Promise<
   saveParty(db, result.state, account, Date.now());
   return null;
 }
+
+/**
+ * Claims a defeated boss's reward (D58). The +50 gold goes into the hero's event log on the
+ * server, so a sync right after brings it to the phone; nothing is added here first (D62).
+ */
+export async function claimReward(
+  db: AppDb,
+  bossWeekId: string,
+  sync: () => void,
+): Promise<string | null> {
+  const error = await runPartyAction(db, { action: 'claim_reward', boss_week_id: bossWeekId });
+  if (error === null) sync();
+  return error;
+}

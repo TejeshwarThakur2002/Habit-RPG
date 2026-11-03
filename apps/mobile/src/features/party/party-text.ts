@@ -1,7 +1,8 @@
-// What the Party tab says (SCOPE.md section 5.5; D61): battle-log lines and the stale banner.
+// What the Party tab says (SCOPE.md section 5.5; D61, D62): battle-log lines, the stale banner
+// and the countdown to the next boss.
 // Plain functions of the stored party and the time, so the tests pin the wording.
 
-import { BOSS_NAMES } from '@habit-rpg/game-core';
+import { BOSS_NAMES, addDays, weekStart, zonedInstant } from '@habit-rpg/game-core';
 import type { LogPart } from '@habit-rpg/ui';
 
 import type { PartyEventView, PartyView } from '@/db/queries/party';
@@ -64,4 +65,15 @@ export function staleText(party: PartyView, refreshFailed: boolean, now: number)
   const old = now - Date.parse(party.fetchedAt) > STALE_AFTER_MS;
   if (!refreshFailed && !old) return null;
   return `Showing last synced data (${sinceText(party.fetchedAt, now)})`;
+}
+
+/** "Next boss in 2 d 5 h": the time to Monday 00:00 in the party's own time zone. */
+export function nextBossText(timeZone: string, now: number): string {
+  const monday = zonedInstant(addDays(weekStart(now, timeZone), 7), 0, 0, timeZone);
+  const minutes = Math.max(1, Math.ceil((monday - now) / 60_000));
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  if (days > 0) return `Next boss in ${days} d ${hours} h`;
+  if (hours > 0) return `Next boss in ${hours} h ${minutes % 60} min`;
+  return `Next boss in ${minutes} min`;
 }

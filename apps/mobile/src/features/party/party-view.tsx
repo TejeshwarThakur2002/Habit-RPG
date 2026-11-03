@@ -2,6 +2,7 @@ import {
   Button,
   MemberRow,
   ScreenHeader,
+  Toast,
   colors,
   spacing,
   type,
@@ -15,9 +16,9 @@ import type { PartyMemberView, PartyView as Party } from '@/db/queries/party';
 import { Card } from '@/features/stats/card';
 
 import { confirmLeave } from './confirm-leave';
-import { BattleLog, BossFight, StaleBanner } from './party-board';
+import { BattleLog, BossFight, InviteCard, StaleBanner, Victory } from './party-board';
 import { CreatePartyCard, JoinPartyCard, NeedsAccountCard } from './party-start';
-import { battleLogLines, staleText, type LogLine } from './party-text';
+import { battleLogLines, nextBossText, staleText, type LogLine } from './party-text';
 
 export type PartyMode = 'account' | 'local' | 'demo';
 
@@ -31,10 +32,13 @@ export interface PartyViewProps {
   onCreate: (name: string) => Promise<string | null>;
   onJoin: (code: string) => Promise<string | null>;
   onLeave: () => Promise<string | null>;
+  onClaim: (bossWeekId: string) => Promise<string | null>;
+  onCopy: (code: string) => Promise<void>;
+  onShare: (code: string) => Promise<void>;
   onLinkAccount: () => void;
 }
 
-/** SCOPE.md section 5.5: the Party tab. Copy, Share and claiming come in the next PR (D61). */
+/** SCOPE.md section 5.5: the Party tab (D60 to D62). */
 export function PartyView({
   mode,
   party,
@@ -43,6 +47,9 @@ export function PartyView({
   onCreate,
   onJoin,
   onLeave,
+  onClaim,
+  onCopy,
+  onShare,
   onLinkAccount,
 }: PartyViewProps) {
   const insets = useSafeAreaInsets();
@@ -53,35 +60,56 @@ export function PartyView({
     setBusy(false);
     return error;
   };
+  const [toast, setToast] = useState<string | null>(null);
+  const copy = async (code: string) => {
+    await onCopy(code);
+    setToast('Code copied');
+  };
+  const claim = async (bossWeekId: string) => {
+    const error = await onClaim(bossWeekId);
+    if (error === null) setToast('+50 gold claimed');
+    return error;
+  };
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
-      keyboardShouldPersistTaps="handled"
-    >
-      {party ? (
-        <InParty
-          party={party}
-          readOnly={mode === 'demo'}
-          stale={mode === 'account' ? staleText(party, refreshFailed, now) : null}
-          lines={battleLogLines(party, now)}
-          busy={busy}
-          onLeave={run(onLeave)}
-        />
-      ) : (
-        <>
-          <ScreenHeader title="Party" />
-          {mode === 'local' ? (
-            <NeedsAccountCard onLinkAccount={onLinkAccount} />
-          ) : (
-            <>
-              <CreatePartyCard onSubmit={run(onCreate)} disabled={busy} />
-              <JoinPartyCard onSubmit={run(onJoin)} disabled={busy} />
-            </>
-          )}
-        </>
+    <View style={styles.screen}>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+        keyboardShouldPersistTaps="handled"
+      >
+        {party ? (
+          <InParty
+            party={party}
+            readOnly={mode === 'demo'}
+            stale={mode === 'account' ? staleText(party, refreshFailed, now) : null}
+            lines={battleLogLines(party, now)}
+            countdown={nextBossText(party.timezone, now)}
+            onClaim={claim}
+            onCopy={() => void copy(party.code)}
+            onShare={() => void onShare(party.code)}
+            busy={busy}
+            onLeave={run(onLeave)}
+          />
+        ) : (
+          <>
+            <ScreenHeader title="Party" />
+            {mode === 'local' ? (
+              <NeedsAccountCard onLinkAccount={onLinkAccount} />
+            ) : (
+              <>
+                <CreatePartyCard onSubmit={run(onCreate)} disabled={busy} />
+                <JoinPartyCard onSubmit={run(onJoin)} disabled={busy} />
+              </>
+            )}
+          </>
+        )}
+      </ScrollView>
+      {toast && (
+        <View style={styles.toast}>
+          <Toast key={toast} message={toast} onDismiss={() => setToast(null)} />
+        </View>
       )}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -90,10 +118,15 @@ function InParty(props: {
   readOnly: boolean;
   stale: string | null;
   lines: LogLine[];
+  countdown: string;
+  onClaim: (bossWeekId: string) => Promise<string | null>;
+  onCopy: () => void;
+  onShare: () => void;
   busy: boolean;
   onLeave: (value: string) => Promise<string | null>;
 }) {
-  const { party, readOnly, stale, lines, busy, onLeave } = props;
+  const { party, readOnly, stale, lines, countdown, busy, onLeave } = props;
+  const boss = party.boss;
   const [failure, setFailure] = useState<string | null>(null);
   const days = party.boss?.daysLeft;
   return (
@@ -105,7 +138,15 @@ function InParty(props: {
         )}
       </View>
       {stale && <StaleBanner text={stale} />}
-      {party.boss && <BossFight boss={party.boss} />}
+      {boss && <BossFight boss={boss} />}
+      {boss?.defeated && (
+        <Victory
+          claimed={boss.claimed}
+          readOnly={readOnly}
+          countdown={countdown}
+          onClaim={() => props.onClaim(boss.id)}
+        />
+      )}
       <Card>
         <Text accessibilityRole="header" style={type.sectionTitle}>
           Party damage this week
@@ -123,17 +164,7 @@ function InParty(props: {
           ))}
       </Card>
       <BattleLog lines={lines} />
-      <Card>
-        <Text accessibilityRole="header" style={type.sectionTitle}>
-          Invite friends
-        </Text>
-        <Text
-          accessibilityLabel={`Invite code ${party.code.split('').join(' ')}`}
-          style={type.body}
-        >
-          Invite code: <Text style={styles.code}>{party.code}</Text>
-        </Text>
-      </Card>
+      <InviteCard code={party.code} onCopy={props.onCopy} onShare={props.onShare} />
       {!readOnly && (
         <View style={styles.leave}>
           {failure && (
@@ -172,7 +203,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { gap: spacing.section, paddingHorizontal: spacing.screenX, paddingBottom: 32 },
   header: { gap: 2 },
-  code: { ...type.name, color: colors.gold, letterSpacing: 2 },
   leave: { gap: 8 },
   failure: { color: colors.red, textAlign: 'center' },
+  toast: { position: 'absolute', left: spacing.screenX, right: spacing.screenX, bottom: 16 },
 });

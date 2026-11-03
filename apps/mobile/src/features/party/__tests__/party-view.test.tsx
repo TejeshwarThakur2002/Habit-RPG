@@ -48,6 +48,9 @@ async function setup(mode: PartyMode, party: Party | null, refreshFailed = false
     onCreate: jest.fn(async () => null as string | null),
     onJoin: jest.fn(async () => null as string | null),
     onLeave: jest.fn(async () => null as string | null),
+    onClaim: jest.fn(async (_id: string) => null as string | null),
+    onCopy: jest.fn(async (_code: string) => {}),
+    onShare: jest.fn(async (_code: string) => {}),
     onLinkAccount: jest.fn(),
   };
   await render(
@@ -118,6 +121,8 @@ describe('PartyView', () => {
     await setup('account', PARTY);
     expect(screen.getByRole('header', { name: 'Procrastination Slime' })).toBeOnTheScreen();
     expect(screen.getByText('1,430 / 1,500 HP')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /Claim reward/ })).toBeNull();
+    expect(screen.queryByText(/Next boss in/)).toBeNull();
     expect(screen.getByText(/finished "Read" · 45 dmg · 4 min ago/)).toBeOnTheScreen();
     expect(screen.queryByRole('alert')).toBeNull();
   });
@@ -141,5 +146,46 @@ describe('PartyView', () => {
     const [ravi, ada, ...rest] = PARTY.members;
     await setup('account', { ...PARTY, members: [ada!, ravi!, ...rest] });
     expect(avatar()?.props.style).toEqual(before);
+  });
+
+  it('copies and shares the invite code', async () => {
+    const { onCopy, onShare } = await setup('account', PARTY);
+    await fireEvent.press(screen.getByRole('button', { name: 'Copy' }));
+    expect(onCopy).toHaveBeenCalledWith('K7M2QX');
+    expect(await screen.findByText('Code copied')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Share' }));
+    expect(onShare).toHaveBeenCalledWith('K7M2QX');
+  });
+
+  describe('a defeated boss', () => {
+    const beaten = (claimed: boolean): Party => ({
+      ...PARTY,
+      boss: { ...PARTY.boss!, currentHp: 0, defeated: true, claimed },
+    });
+
+    it('offers the reward once, then counts down to the next boss', async () => {
+      const { onClaim } = await setup('account', beaten(false));
+      expect(screen.getByText('Defeated!')).toBeOnTheScreen();
+      await fireEvent.press(screen.getByRole('button', { name: 'Claim reward: 50 gold' }));
+      expect(onClaim).toHaveBeenCalledWith('b');
+      expect(await screen.findByText('+50 gold claimed')).toBeOnTheScreen();
+      await setup('account', beaten(true));
+      expect(screen.queryByRole('button', { name: /Claim reward/ })).toBeNull();
+      expect(screen.getByText(/^Reward claimed\. Next boss in 4 d 12 h$/)).toBeOnTheScreen();
+    });
+
+    it("shows why the reward wasn't paid", async () => {
+      const { onClaim } = await setup('account', beaten(false));
+      onClaim.mockResolvedValue("You're not in that party any more.");
+      await fireEvent.press(screen.getByRole('button', { name: 'Claim reward: 50 gold' }));
+      expect(await screen.findByText("You're not in that party any more.")).toBeOnTheScreen();
+      expect(screen.queryByText('+50 gold claimed')).toBeNull();
+    });
+
+    it('only counts down in the demo', async () => {
+      await setup('demo', beaten(false));
+      expect(screen.queryByRole('button', { name: /Claim reward/ })).toBeNull();
+      expect(screen.getByText(/^Next boss in/)).toBeOnTheScreen();
+    });
   });
 });
