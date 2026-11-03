@@ -56,7 +56,15 @@ describe('partyStateSchema', () => {
           days_left: 6,
         },
         events: [
-          { id: ID, kind: 'damage', user_id: ID, amount: 42, habit_name: 'Read', created_at: AT },
+          {
+            id: ID,
+            kind: 'damage',
+            boss_week_id: ID,
+            user_id: ID,
+            amount: 42,
+            habit_name: 'Read',
+            created_at: AT,
+          },
         ],
         claimed: false,
       },

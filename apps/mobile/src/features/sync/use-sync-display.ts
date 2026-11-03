@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 
 import { db } from '@/db/client';
 import { countWaiting } from '@/db/queries/outbox';
@@ -6,6 +6,7 @@ import { getSettings } from '@/db/queries/settings';
 import { getSyncState } from '@/db/queries/sync-state';
 import { useDbQuery } from '@/db/use-db-query';
 import { newId } from '@/lib/device';
+import { useMinuteClock } from '@/lib/use-minute-clock';
 import { syncService } from '@/sync/sync-runner';
 
 import { syncDisplay, type SyncDisplay, type SyncMode } from './sync-display';
@@ -20,11 +21,7 @@ function readFacts() {
 export function useSyncDisplay(): SyncDisplay {
   const activity = useSyncExternalStore(syncService.subscribe, syncService.activity);
   const facts = useDbQuery(readFacts);
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(timer);
-  }, []);
+  const now = useMinuteClock();
   return syncDisplay({ ...facts, activity, now });
 }
 

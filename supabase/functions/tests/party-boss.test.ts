@@ -92,7 +92,7 @@ const setHp = (bossId: string, hp: number) =>
   query((sql) => sql`update public.boss_weeks set current_hp = ${hp} where id = ${bossId}`);
 
 test('a completion hits the boss once, and undoing it gives the damage back', async () => {
-  await withParty(1, async ([a], [quest]) => {
+  await withParty(1, async ([a], [quest], bossId) => {
     const id = crypto.randomUUID();
     const res = await sync(a!, [done(id, quest!)]);
     const dealt = res.changes.find((c) => c.table === 'completions')!;
@@ -101,6 +101,7 @@ test('a completion hits the boss once, and undoing it gives the damage back', as
     assertEquals(party.boss?.current_hp, 500 - damage);
     assertEquals(party.members[0]?.damage, damage);
     assertEquals([party.events[0]?.kind, party.events[0]?.habit_name], ['damage', 'Run']);
+    assertEquals(party.events[0]?.boss_week_id, bossId);
 
     await sync(a!, [done(id, quest!)]);
     assertEquals((await partyOf(a!)).boss?.current_hp, 500 - damage);

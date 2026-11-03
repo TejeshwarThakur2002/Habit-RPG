@@ -81,6 +81,8 @@ export const partyBossSchema = z.strictObject({
 export const partyEventSchema = z.strictObject({
   id: uuid,
   kind: z.enum(PARTY_EVENT_KINDS),
+  /** The boss the line is about; the job narrates a day late, so it can be last week's. */
+  boss_week_id: uuid.nullable(),
   user_id: uuid.nullable(),
   amount: z.int().min(0).nullable(),
   habit_name: z.string().nullable(),

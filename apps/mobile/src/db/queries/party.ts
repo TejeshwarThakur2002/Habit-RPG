@@ -2,8 +2,15 @@
 // stored in the party read-model tables so the Party tab reads SQLite like every screen, and
 // works offline with what it last saw.
 
-import type { PartyState } from '@habit-rpg/shared';
-import { daysLeftInWeek, localDate, type BossKey, type HeroClass } from '@habit-rpg/game-core';
+import type { PartyEvent, PartyState } from '@habit-rpg/shared';
+import {
+  daysLeftInWeek,
+  localDate,
+  weekStart,
+  type BossKey,
+  type HeroClass,
+  type LocalDate,
+} from '@habit-rpg/game-core';
 import { desc, eq, sql } from 'drizzle-orm';
 
 import * as t from '../schema';
@@ -70,7 +77,7 @@ export function saveParty(db: AppDb, state: PartyState, accountUserId: string, n
         .values({
           id: e.id,
           partyId: party.id,
-          bossWeekId: party.boss?.id ?? null,
+          bossWeekId: e.boss_week_id,
           userId: local(e.user_id),
           kind: e.kind,
           amount: e.amount,
@@ -92,20 +99,37 @@ export interface PartyMemberView {
   damage: number;
 }
 
+type PartyEventKind = PartyEvent['kind'];
+
+export interface PartyEventView {
+  id: string;
+  kind: PartyEventKind;
+  bossWeekId: string | null;
+  userId: string | null;
+  amount: number | null;
+  habitName: string | null;
+  createdAt: string;
+}
+
 export interface PartyView {
   id: string;
   name: string;
   code: string;
+  timezone: string;
   fetchedAt: string | null;
   members: PartyMemberView[];
+  /** The battle log, newest first: the latest 20 the server sent. */
+  events: PartyEventView[];
   boss: {
     id: string;
     bossKey: BossKey;
+    weekStart: LocalDate;
     maxHp: number;
     currentHp: number;
     defeated: boolean;
     claimed: boolean;
-    daysLeft: number;
+    /** Null when the stored boss is from a past week, before the server's rollover reached it. */
+    daysLeft: number | null;
   } | null;
 }
 
@@ -133,21 +157,42 @@ export function getPartyView(db: AppDb, now: number): PartyView | null {
     .where(eq(t.bossWeeks.partyId, party.id))
     .orderBy(desc(t.bossWeeks.weekStart))
     .get();
+  const events = db
+    .select({
+      id: t.partyEvents.id,
+      kind: t.partyEvents.kind,
+      bossWeekId: t.partyEvents.bossWeekId,
+      userId: t.partyEvents.userId,
+      amount: t.partyEvents.amount,
+      habitName: t.partyEvents.habitName,
+      createdAt: t.partyEvents.createdAt,
+    })
+    .from(t.partyEvents)
+    .where(eq(t.partyEvents.partyId, party.id))
+    .orderBy(desc(t.partyEvents.createdAt))
+    .limit(20)
+    .all();
   return {
     id: party.id,
     name: party.name,
     code: party.code,
+    timezone: party.timezone,
     fetchedAt: party.fetchedAt,
     members,
+    events,
     boss: boss
       ? {
           id: boss.id,
           bossKey: boss.bossKey,
+          weekStart: boss.weekStart,
           maxHp: boss.maxHp,
           currentHp: boss.currentHp,
           defeated: boss.defeatedAt !== null,
           claimed: boss.claimed,
-          daysLeft: daysLeftInWeek(localDate(now, party.timezone)),
+          daysLeft:
+            boss.weekStart === weekStart(now, party.timezone)
+              ? daysLeftInWeek(localDate(now, party.timezone))
+              : null,
         }
       : null,
   };

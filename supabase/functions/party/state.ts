@@ -87,6 +87,7 @@ export async function partyState(
       events: events.map((e) => ({
         id: e.id as string,
         kind: e.kind,
+        boss_week_id: (e.boss_week_id as string | null) ?? null,
         user_id: (e.user_id as string | null) ?? null,
         amount: (e.amount as number | null) ?? null,
         habit_name: (e.habit_name as string | null) ?? null,
