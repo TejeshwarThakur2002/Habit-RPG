@@ -1,10 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
+import * as Reanimated from 'react-native-reanimated';
 
 import { DragHandle, HabitRow, habitRowLabel } from '../components/habit-row';
 import { Heatmap, heatLevel } from '../components/heatmap';
 import { BattleLogLine, BossCard, MemberRow, formatNumber } from '../components/party';
 import { ShopItem } from '../components/shop-item';
+import { ReduceMotionProvider } from '../motion';
 
 describe('HabitRow', () => {
   const props = { name: 'Code for 1 hour', meta: 'Daily · Medium', rewardXp: 20 };
@@ -157,6 +159,26 @@ describe('Party components', () => {
     ).toHaveAccessibilityValue({
       text: '1,240 / 2,000 HP',
     });
+  });
+
+  it('slides the HP bar down after a hit, unless motion is reduced', async () => {
+    const timing = jest.spyOn(Reanimated, 'withTiming');
+    const card = (hp: number) => (
+      <BossCard name="Snooze Goblin" hp={hp} maxHp={1000} sprite={null} />
+    );
+    const view = await render(card(1000));
+    timing.mockClear();
+    await view.rerender(card(979));
+    expect(timing).toHaveBeenCalledWith(0.979, expect.objectContaining({ duration: 300 }));
+
+    const still = (hp: number) => (
+      <ReduceMotionProvider value="on">{card(hp)}</ReduceMotionProvider>
+    );
+    const reduced = await render(still(1000));
+    timing.mockClear();
+    await reduced.rerender(still(979));
+    expect(timing).not.toHaveBeenCalled();
+    timing.mockRestore();
   });
 
   it('marks a defeated boss in words', async () => {
