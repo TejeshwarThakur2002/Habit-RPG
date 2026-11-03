@@ -1,6 +1,6 @@
 import type { PartyEventView, PartyView } from '@/db/queries/party';
 
-import { battleLogLines, staleText } from '../party-text';
+import { battleLogLines, nextBossText, staleText } from '../party-text';
 
 // Wednesday 28 October 2026, 12:00 in Toronto.
 const NOW = Date.parse('2026-10-28T16:00:00.000Z');
@@ -96,5 +96,20 @@ describe('staleText', () => {
 
   it('has nothing to say about a party never fetched', () => {
     expect(staleText(party([], null), true, NOW)).toBeNull();
+  });
+});
+
+describe('nextBossText', () => {
+  it("counts to Monday 00:00 in the party's zone, across the clock change", () => {
+    // Toronto falls back on Sunday 1 November, so Wednesday noon to Monday is 4 d 13 h.
+    expect(nextBossText('America/Toronto', NOW)).toBe('Next boss in 4 d 13 h');
+    // Auckland is already on Thursday morning, 3 d 19 h before its Monday.
+    expect(nextBossText('Pacific/Auckland', NOW)).toBe('Next boss in 3 d 19 h');
+  });
+
+  it('narrows to hours and minutes on Sunday night', () => {
+    const sunday = (time: string) => Date.parse(`2026-11-01T${time}-05:00`);
+    expect(nextBossText('America/Toronto', sunday('21:30:00'))).toBe('Next boss in 2 h 30 min');
+    expect(nextBossText('America/Toronto', sunday('23:59:30'))).toBe('Next boss in 1 min');
   });
 });

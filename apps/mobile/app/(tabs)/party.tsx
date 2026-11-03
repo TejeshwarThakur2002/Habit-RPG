@@ -5,8 +5,10 @@ import { db } from '@/db/client';
 import { getPartyView } from '@/db/queries/party';
 import { getSettings } from '@/db/queries/settings';
 import { useDbQuery } from '@/db/use-db-query';
-import { runPartyAction } from '@/features/party/party-actions';
+import { claimReward, runPartyAction } from '@/features/party/party-actions';
+import { copyCode, shareCode } from '@/features/party/invite';
 import { PartyView, type PartyMode } from '@/features/party/party-view';
+import { syncNow } from '@/features/sync/use-sync-display';
 import { useMinuteClock } from '@/lib/use-minute-clock';
 
 function readParty() {
@@ -48,6 +50,9 @@ export default function Party() {
       onCreate={(name) => act(runPartyAction(db, { action: 'create', name }))}
       onJoin={(code) => act(runPartyAction(db, { action: 'join', code }))}
       onLeave={() => act(runPartyAction(db, { action: 'leave' }))}
+      onClaim={(bossWeekId) => act(claimReward(db, bossWeekId, syncNow))}
+      onCopy={copyCode}
+      onShare={shareCode}
       onLinkAccount={() => router.push('/modal/link-account')}
     />
   );
