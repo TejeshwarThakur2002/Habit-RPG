@@ -42,6 +42,7 @@ function snapshot(overrides: Partial<NonNullable<PartyState['party']>> = {}): Pa
         {
           id: '00000000-0000-4000-8000-0000000000e1',
           kind: 'damage',
+          boss_week_id: BOSS,
           user_id: ME,
           amount: 20,
           habit_name: 'Read',
@@ -79,6 +80,29 @@ describe('saveParty and getPartyView', () => {
     expect(getPartyView(db, NOW)?.boss?.daysLeft).toBe(5);
     // Sunday 23:30 in Toronto is already Monday in UTC; still the last day there.
     expect(getPartyView(db, Date.parse('2026-11-02T04:30:00Z'))?.boss?.daysLeft).toBe(1);
+    // Monday 9 November: the stored boss is last week's, so there is no count to show.
+    expect(getPartyView(db, Date.parse('2026-11-09T16:00:00Z'))?.boss?.daysLeft).toBeNull();
+  });
+
+  it('reads the battle log newest first, at most 20, the player as `local`', () => {
+    const events = Array.from({ length: 20 }, (_, i) => ({
+      id: `00000000-0000-4000-8000-0000000001${String(i).padStart(2, '0')}`,
+      kind: 'damage' as const,
+      boss_week_id: BOSS,
+      user_id: i % 2 ? ME : RAVI,
+      amount: 10,
+      habit_name: 'Read',
+      created_at: new Date(NOW - (20 - i) * 60_000).toISOString(),
+    }));
+    saveParty(db, snapshot({ events }), ME, NOW);
+    const log = getPartyView(db, NOW)!.events;
+    expect(log).toHaveLength(20);
+    expect(log[0]).toMatchObject({ id: events[19]!.id, userId: LOCAL_USER_ID, bossWeekId: BOSS });
+    expect(log[19]?.id).toBe(events[0]!.id);
+    expect(getPartyView(db, NOW)).toMatchObject({
+      timezone: 'America/Toronto',
+      boss: { weekStart: '2026-10-26' },
+    });
   });
 
   it('replaces the previous party, and clears it on leaving', () => {

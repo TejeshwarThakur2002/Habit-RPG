@@ -9,6 +9,7 @@ const PARTY: Party = {
   id: 'p',
   name: 'Night Owls',
   code: 'K7M2QX',
+  timezone: 'America/Toronto',
   fetchedAt: '2026-10-28T16:00:00.000Z',
   members: [
     { userId: 'r', name: 'Ravi', heroClass: 'mage', isYou: false, active: true, damage: 45 },
@@ -16,9 +17,21 @@ const PARTY: Party = {
     { userId: 'x', name: null, heroClass: null, isYou: false, active: true, damage: 5 },
     { userId: 'y', name: 'Gone', heroClass: 'rogue', isYou: false, active: false, damage: 9 },
   ],
+  events: [
+    {
+      id: 'e1',
+      kind: 'damage',
+      bossWeekId: 'b',
+      userId: 'r',
+      amount: 45,
+      habitName: 'Read',
+      createdAt: '2026-10-28T15:58:00.000Z',
+    },
+  ],
   boss: {
     id: 'b',
     bossKey: 'procrastination-slime',
+    weekStart: '2026-10-26',
     maxHp: 1500,
     currentHp: 1430,
     defeated: false,
@@ -27,14 +40,19 @@ const PARTY: Party = {
   },
 };
 
-async function setup(mode: PartyMode, party: Party | null) {
+// Two minutes after the snapshot was fetched.
+const NOW = Date.parse('2026-10-28T16:02:00.000Z');
+
+async function setup(mode: PartyMode, party: Party | null, refreshFailed = false) {
   const props = {
     onCreate: jest.fn(async () => null as string | null),
     onJoin: jest.fn(async () => null as string | null),
     onLeave: jest.fn(async () => null as string | null),
     onLinkAccount: jest.fn(),
   };
-  await render(<PartyView mode={mode} party={party} {...props} />);
+  await render(
+    <PartyView mode={mode} party={party} refreshFailed={refreshFailed} now={NOW} {...props} />,
+  );
   return props;
 }
 
@@ -94,5 +112,34 @@ describe('PartyView', () => {
     await setup('demo', PARTY);
     expect(screen.getByText('K7M2QX')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Leave party' })).toBeNull();
+  });
+
+  it("shows this week's boss, its HP and the battle log", async () => {
+    await setup('account', PARTY);
+    expect(screen.getByRole('header', { name: 'Procrastination Slime' })).toBeOnTheScreen();
+    expect(screen.getByText('1,430 / 1,500 HP')).toBeOnTheScreen();
+    expect(screen.getByText(/finished "Read" · 45 dmg · 4 min ago/)).toBeOnTheScreen();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('says when the stored party may be out of date, but never in the demo', async () => {
+    await setup('account', PARTY, true);
+    expect(screen.getByRole('alert')).toHaveTextContent('Showing last synced data (2 min ago)');
+    await setup('demo', PARTY, true);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('invites the first hit when the log is empty', async () => {
+    await setup('account', { ...PARTY, events: [] });
+    expect(screen.getByText('No hits yet. Finish a quest to strike first.')).toBeOnTheScreen();
+  });
+
+  it("keeps each member's colour when the damage order changes", async () => {
+    const avatar = () => screen.getByText('R').parent;
+    await setup('account', PARTY);
+    const before = avatar()?.props.style;
+    const [ravi, ada, ...rest] = PARTY.members;
+    await setup('account', { ...PARTY, members: [ada!, ravi!, ...rest] });
+    expect(avatar()?.props.style).toEqual(before);
   });
 });

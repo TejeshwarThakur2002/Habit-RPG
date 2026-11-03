@@ -1,5 +1,5 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { db } from '@/db/client';
 import { getPartyView } from '@/db/queries/party';
@@ -7,6 +7,7 @@ import { getSettings } from '@/db/queries/settings';
 import { useDbQuery } from '@/db/use-db-query';
 import { runPartyAction } from '@/features/party/party-actions';
 import { PartyView, type PartyMode } from '@/features/party/party-view';
+import { useMinuteClock } from '@/lib/use-minute-clock';
 
 function readParty() {
   const settings = getSettings(db);
@@ -20,22 +21,33 @@ function readParty() {
 
 export default function Party() {
   const { mode, party } = useDbQuery(readParty);
-  // A fresh snapshot each time the tab opens; offline, it shows what it last saw (D60).
+  const now = useMinuteClock();
+  const [refreshFailed, setRefreshFailed] = useState(false);
+  // A fresh snapshot each time the tab opens; offline, it shows what it last saw (D60, D61).
   useFocusEffect(
     useCallback(() => {
       if (mode !== 'account') return;
       void runPartyAction(db, { action: 'state' }).then((error) => {
         if (error) console.info('party: showing the stored party;', error);
+        setRefreshFailed(error !== null);
       });
     }, [mode]),
   );
+  // An action that went through brought a fresh snapshot with it.
+  const act = async (action: Promise<string | null>) => {
+    const error = await action;
+    if (error === null) setRefreshFailed(false);
+    return error;
+  };
   return (
     <PartyView
       mode={mode}
       party={party}
-      onCreate={(name) => runPartyAction(db, { action: 'create', name })}
-      onJoin={(code) => runPartyAction(db, { action: 'join', code })}
-      onLeave={() => runPartyAction(db, { action: 'leave' })}
+      refreshFailed={refreshFailed}
+      now={now}
+      onCreate={(name) => act(runPartyAction(db, { action: 'create', name }))}
+      onJoin={(code) => act(runPartyAction(db, { action: 'join', code }))}
+      onLeave={() => act(runPartyAction(db, { action: 'leave' }))}
       onLinkAccount={() => router.push('/modal/link-account')}
     />
   );
