@@ -28,11 +28,13 @@ let db: AppDb;
 let server: FakeSyncServer;
 let timers: Timer[];
 let service: SyncService;
+let onSynced: jest.Mock;
 
 beforeEach(async () => {
   db = await createTestDb();
   server = new FakeSyncServer();
   timers = [];
+  onSynced = jest.fn();
   service = makeService(server);
 });
 afterEach(() => {
@@ -55,6 +57,7 @@ function makeService(transport: { send: FakeSyncServer['send'] }) {
     clearTimer: (handle) => {
       timers = timers.filter((t) => t !== handle);
     },
+    onSynced,
   });
 }
 
@@ -156,6 +159,17 @@ describe('the sync service', () => {
     expect(await fire()).toBe(2000);
     expect(service.activity()).toEqual({ state: 'idle', message: null });
     expect(waiting()).toBe(0);
+  });
+
+  it('tells the app after each sync that went through, and only then', async () => {
+    await synced();
+    onSynced.mockClear();
+    quest();
+    server.failNext('offline');
+    await service.request('write');
+    expect(onSynced).not.toHaveBeenCalled();
+    await fire();
+    expect(onSynced).toHaveBeenCalledTimes(1);
   });
 
   it("leaves a failed attempt's retry to the backoff, but sends a new change", async () => {

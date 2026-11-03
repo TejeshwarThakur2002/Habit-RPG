@@ -1,13 +1,24 @@
 import { FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js';
 
 import { setSimulatedOffline } from '../../sync/offline-switch';
-import { callParty, partyErrorMessage } from '../supabase';
+import { callParty, partyErrorMessage, watchPartyEvents } from '../supabase';
 
 const mockInvoke = jest.fn();
+interface FakeChannel {
+  on: jest.Mock<FakeChannel>;
+  subscribe: jest.Mock<FakeChannel>;
+}
+const mockChannel: FakeChannel = {
+  on: jest.fn((): FakeChannel => mockChannel),
+  subscribe: jest.fn((): FakeChannel => mockChannel),
+};
+const mockRemove = jest.fn(() => Promise.resolve('ok'));
 jest.mock('@supabase/supabase-js', () => ({
   ...jest.requireActual('@supabase/supabase-js'),
   createClient: () => ({
     functions: { invoke: mockInvoke },
+    channel: jest.fn(() => mockChannel),
+    removeChannel: mockRemove,
     auth: { startAutoRefresh: jest.fn(), stopAutoRefresh: jest.fn() },
   }),
 }));
@@ -69,5 +80,25 @@ describe('partyErrorMessage', () => {
   it('has a message for an unknown code', () => {
     expect(partyErrorMessage('teapot', false)).toBe('Something went wrong. Try again.');
     expect(partyErrorMessage('not_found', false)).toMatch(/No party has that code/);
+  });
+});
+
+describe('watchPartyEvents', () => {
+  it("hears new lines in its own party's log only, and stops when asked", () => {
+    const onEvent = jest.fn();
+    const stop = watchPartyEvents('p1', onEvent);
+    const [kind, filter, listener] = mockChannel.on.mock.calls[0] as unknown as [
+      string,
+      object,
+      () => void,
+    ];
+    expect([kind, filter]).toEqual([
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'party_events', filter: 'party_id=eq.p1' },
+    ]);
+    listener();
+    expect(onEvent).toHaveBeenCalledTimes(1);
+    stop();
+    expect(mockRemove).toHaveBeenCalledWith(mockChannel);
   });
 });

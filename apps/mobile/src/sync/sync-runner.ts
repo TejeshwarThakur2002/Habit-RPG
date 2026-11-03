@@ -5,6 +5,8 @@
 import Constants from 'expo-constants';
 
 import { db } from '@/db/client';
+import { runPartyAction } from '@/features/party/party-actions';
+import { refreshAfterSync } from '@/features/party/party-live';
 import { newId } from '@/lib/device';
 import { sendSync } from '@/lib/supabase';
 
@@ -20,6 +22,12 @@ export const syncService = createSyncService({
   now: Date.now,
   setTimer: (run, ms) => setTimeout(run, ms),
   clearTimer: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+  onSynced: () =>
+    refreshAfterSync(db, () => {
+      void runPartyAction(db, { action: 'state' }).then((error) => {
+        if (error) console.info('party: refresh after sync skipped;', error);
+      });
+    }),
 });
 
 export function firstSyncNow(
