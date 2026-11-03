@@ -131,6 +131,8 @@ export const parties = sqliteTable('parties', {
   name: text('name').notNull(),
   code: text('code').notNull(),
   timezone: text('timezone').notNull(),
+  /** When the snapshot was fetched, for "Showing last synced data" (D60). */
+  fetchedAt: text('fetched_at'),
 });
 
 export const partyMembers = sqliteTable(
@@ -138,10 +140,13 @@ export const partyMembers = sqliteTable(
   {
     partyId: text('party_id').notNull(),
     userId: text('user_id').notNull(),
-    heroName: text('hero_name').notNull(),
-    heroClass: text('class').$type<HeroClass>().notNull(),
+    /** Null for a hero that no longer exists: "A former member" (D60). */
+    heroName: text('hero_name'),
+    heroClass: text('class').$type<HeroClass>(),
     joinedAt: text('joined_at').notNull(),
     leftAt: text('left_at'),
+    /** Damage to this week's boss, net of undone completions, as the server worked it out. */
+    damage: integer('damage').notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.partyId, t.userId] })],
 );
@@ -154,6 +159,8 @@ export const bossWeeks = sqliteTable('boss_weeks', {
   maxHp: integer('max_hp').notNull(),
   currentHp: integer('current_hp').notNull(),
   defeatedAt: text('defeated_at'),
+  /** This player has claimed this boss's reward (D58). */
+  claimed: integer('claimed', { mode: 'boolean' }).notNull().default(false),
 });
 
 export const partyEvents = sqliteTable(
@@ -163,7 +170,9 @@ export const partyEvents = sqliteTable(
     partyId: text('party_id').notNull(),
     bossWeekId: text('boss_week_id'),
     userId: text('user_id'),
-    kind: text('kind').$type<'damage' | 'boss_attack' | 'victory' | 'join' | 'leave'>().notNull(),
+    kind: text('kind')
+      .$type<'damage' | 'undo' | 'boss_attack' | 'victory' | 'join' | 'leave'>()
+      .notNull(),
     amount: integer('amount'),
     habitName: text('habit_name'),
     createdAt: text('created_at').notNull(),
