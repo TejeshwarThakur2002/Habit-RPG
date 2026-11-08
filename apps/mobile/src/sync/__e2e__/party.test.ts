@@ -65,16 +65,21 @@ async function refresh(p: { phone: TestPhone; account: TestAccount }) {
 }
 
 /**
- * Listens to the party's battle log as `account`. `ready` resolves once subscribed; `heard`
- * with how long the first line took to arrive after `ready`, or null after `ms`.
+ * Listens to the party's battle log as `account`. `ready` resolves once Realtime says the
+ * Postgres subscription is live (it comes just after SUBSCRIBED, and a line in between is
+ * missed); `heard` with how long the first line took to arrive after that, or null after `ms`.
  */
-function listen(account: TestAccount, partyId: string, ms: number) {
-  const client = realtimeClient(account);
+async function listen(account: TestAccount, partyId: string, ms: number) {
+  const client = await realtimeClient(account);
   clients.push(client);
   let start = 0;
   let markReady = () => {};
-  const ready = new Promise<void>((resolve) => (markReady = resolve));
-  const heard = new Promise<number | null>((resolve, reject) => {
+  let fail = (_error: Error) => {};
+  const ready = new Promise<void>((resolve, reject) => {
+    markReady = resolve;
+    fail = reject;
+  });
+  const heard = new Promise<number | null>((resolve) => {
     let timeout: ReturnType<typeof setTimeout> | undefined;
     client
       .channel(`party-events:${partyId}:${account.id}`)
@@ -91,12 +96,16 @@ function listen(account: TestAccount, partyId: string, ms: number) {
           resolve(Date.now() - start);
         },
       )
-      .subscribe((status, error) => {
-        if (error) return reject(error);
-        if (status !== 'SUBSCRIBED') return;
+      .on('system', {}, (payload: { extension: string; status: string; message: string }) => {
+        if (payload.extension !== 'postgres_changes') return;
+        if (payload.status !== 'ok') return fail(new Error(payload.message));
         start = Date.now();
         timeout = setTimeout(() => resolve(null), ms);
         markReady();
+      })
+      .subscribe((status, error) => {
+        if (error) fail(error);
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') fail(new Error(status));
       });
   });
   return { ready, heard };
@@ -114,8 +123,8 @@ test('two members fight one boss: live hits, the same fight on both phones, one 
   expect('state' in joined).toBe(true);
 
   // Ada's tab is open; a stranger listens to the same party.
-  const adaHears = listen(ada.account, partyId, 5_000);
-  const strangerHears = listen(stranger.account, partyId, 5_000);
+  const adaHears = await listen(ada.account, partyId, 5_000);
+  const strangerHears = await listen(stranger.account, partyId, 5_000);
   await Promise.all([adaHears.ready, strangerHears.ready]);
   completeHabit(bo.phone.db, { userId: PLAYER, habitId: bo.quest, now: Date.now(), newId });
   await bo.phone.sync();

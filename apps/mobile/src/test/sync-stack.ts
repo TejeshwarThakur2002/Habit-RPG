@@ -168,11 +168,14 @@ export async function setBossHp(bossWeekId: string, hp: number): Promise<void> {
   if (!res.ok) throw new Error(`Setting the boss's HP failed: ${res.status}`);
 }
 
-/** A Realtime client signed in as the account, as the app's is (D63). */
-export function realtimeClient(account: TestAccount): SupabaseClient {
+/**
+ * A Realtime client signed in as the account, as the app's is (D63). `setAuth` is async: a
+ * channel joined before it settles joins as the anonymous role and hears nothing (D64).
+ */
+export async function realtimeClient(account: TestAccount): Promise<SupabaseClient> {
   const client = createClient(stack.API_URL, stack.ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  client.realtime.setAuth(account.token);
+  await client.realtime.setAuth(account.token);
   return client;
 }
