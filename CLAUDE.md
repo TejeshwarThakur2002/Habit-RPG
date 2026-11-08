@@ -10,19 +10,20 @@ and licences: [docs/ASSETS.md](docs/ASSETS.md).
 
 ## Current phase
 
-**P4 Offline sync engine is complete** (DECISIONS.md D45 to D55); tag `v0.3.0` with the owner's
-OK. **P5 Party and boss is next**: restate its task list (SCOPE.md section 11) and wait for the
-owner's go-ahead before starting.
+**P5 Party and boss is complete** (DECISIONS.md D56 to D64); tag `v0.4.0` with the owner's OK.
+**P6 Polish and accessibility is next**: restate its task list (SCOPE.md section 11) and wait
+for the owner's go-ahead before starting.
 
-P4 made the phone sync: an outbox written with every change while signed in (D45); the sync
-engine with batches, a cursor and backoff (D46); refused changes rolled back with a toast (D47);
-the first sync for an account, importing a phone's hero or pulling the account's (D48), and the
-two-heroes choice with the server's `replace` and `hero_replaced` (D49, D50); one sync service
-with its triggers, including `expo-network` reconnect (D51); the sync status in the pill and the
-Stats card (D52); the two-phone test, 50 random runs against the real function in CI (D53); and a
-dev-only outbox screen with "Simulate offline" (D54). Still deferred, the owner's call: the hosted
-Supabase project in ca-central-1 with Resend SMTP, and the `e2e.yml` CI workflow (needs a
-development build). Also open: `docs/PRIVACY.md`.
+P5 added parties: the party tables with members-only access and Realtime (D56); the `party`
+function to create, join, leave and read a party (D57); boss damage on sync with a row lock and
+the reward claimed once (D58); the nightly boss hits, Monday rollover and empty-party cleanup
+(D59); the Party tab with create and join, the boss card, battle log and stale banner, Copy and
+Share, claiming and the countdown (D60 to D62); live updates and a refresh after each sync (D63);
+and trophies from the hero's event log, anonymised history for deleted accounts, a two-phone
+party test and a Maestro create-and-join flow (D64). Still deferred, the owner's call: the hosted
+Supabase project in ca-central-1 with Resend SMTP, the `e2e.yml` CI workflow (needs a development
+build), and **the app not starting in Android Expo Go** (`expo-notifications`' native code is no
+longer in it; D64). Also open: `docs/PRIVACY.md`.
 
 On this Mac the Android emulator renders black with its default GPU mode; start it with
 `emulator -avd Medium_Phone_API_37.0 -gpu swiftshader_indirect`.
@@ -48,7 +49,8 @@ pnpm lint                 # ESLint (incl. accessibility rules) + Prettier check
 pnpm format               # Prettier write
 pnpm typecheck            # tsc in every workspace
 pnpm test                 # Vitest + Jest in every workspace
-pnpm e2e                  # Maestro flows (needs the dev server on port 8095 and a booted simulator)
+pnpm e2e                  # Maestro flows (needs the dev server on port 8095, a booted simulator,
+                          # and for the party flow the local stack and functions:serve)
 pnpm supabase:start       # local Supabase stack (needs Docker, e.g. OrbStack)
                           # then put its API URL and publishable key in apps/mobile/.env;
                           # sign-in codes land in Mailpit at http://127.0.0.1:54324
@@ -60,7 +62,8 @@ pnpm functions:serve      # serve Edge Functions locally; first stores a local C
                           # supabase/functions/.env and Vault (rerun after a db reset)
 pnpm functions:test       # Deno tests for Edge Functions; the integration tests call the
                           # running functions, so start `pnpm functions:serve` first
-pnpm sync:test            # two phones vs the running sync function, 50 random runs
+pnpm sync:test            # two phones vs the running sync function, 50 random runs, and a
+                          # party test with Realtime
                           # (SEED=<n> RUNS=1 replays one); needs functions:serve too
 ```
 
