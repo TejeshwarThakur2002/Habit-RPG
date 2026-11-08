@@ -251,3 +251,30 @@ export async function callParty(request: PartyRequest): Promise<PartyResult> {
     message: partyErrorMessage(refusal.success ? refusal.data.error : null, false),
   };
 }
+
+/**
+ * Calls `onEvent` for each new battle-log line in `partyId` while subscribed (SCOPE.md section
+ * 5.5, real-time; D63). Realtime checks each line against the player's read policy, so only a
+ * member hears it. The line itself isn't used: the caller reads the whole snapshot again.
+ * Returns the unsubscribe.
+ */
+export function watchPartyEvents(partyId: string, onEvent: () => void): () => void {
+  const supabase = getSupabase();
+  if (!supabase) return () => {};
+  const channel = supabase
+    .channel(`party-events:${partyId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'party_events',
+        filter: `party_id=eq.${partyId}`,
+      },
+      () => onEvent(),
+    )
+    .subscribe((status, error) => {
+      if (error) console.warn('party: live updates stopped', status, error);
+    });
+  return () => void supabase.removeChannel(channel);
+}

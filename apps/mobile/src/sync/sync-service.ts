@@ -25,7 +25,10 @@ export interface SyncActivity {
 }
 
 export type SyncServiceOptions = Required<Pick<SyncEngineOptions, 'setTimer' | 'clearTimer'>> &
-  SyncEngineOptions;
+  SyncEngineOptions & {
+    /** After each sync that went through, e.g. to bring the party up to date (D63). */
+    onSynced?: () => void;
+  };
 
 /** Changes are sent this long after the last one, so a burst of taps goes in one request. */
 export const WRITE_DELAY_MS = 2000;
@@ -81,7 +84,10 @@ export function createSyncService(o: SyncServiceOptions) {
 
   async function settle(accountUserId: string, outcome: SyncOutcome): Promise<void> {
     pushRejections(outcome.rejected);
-    if (outcome.status === 'synced') return publish({ state: 'idle', message: null });
+    if (outcome.status === 'synced') {
+      publish({ state: 'idle', message: null });
+      return o.onSynced?.();
+    }
     if (outcome.status === 'error' && outcome.code === 'hero_replaced') {
       const back = await takeAccountHero(o, accountUserId);
       if (back.status === 'done') pushNotice(HERO_REPLACED_NOTICE);

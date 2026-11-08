@@ -1,9 +1,17 @@
 // Party screen pieces from SCOPE.md section 5.5: BossCard, MemberRow and BattleLogLine.
 
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { borders, colors, fonts, radii, type, type ColorToken } from '../tokens';
+import { useReduceMotion } from '../motion';
+
+import { borders, colors, fonts, motion, radii, type, type ColorToken } from '../tokens';
 
 /** 1240 -> "1,240" without relying on locale data. */
 export function formatNumber(value: number): string {
@@ -23,6 +31,15 @@ export interface BossCardProps {
 
 export function BossCard({ name, hp, maxHp, sprite, defeated }: BossCardProps) {
   const fraction = maxHp > 0 ? Math.min(1, Math.max(0, hp / maxHp)) : 0;
+  // A hit slides the bar down over 300 ms, as the hero's bars do, unless motion is reduced.
+  const reduceMotion = useReduceMotion();
+  const width = useSharedValue(fraction);
+  useEffect(() => {
+    width.value = reduceMotion
+      ? fraction
+      : withTiming(fraction, { duration: motion.bar, easing: Easing.out(Easing.quad) });
+  }, [fraction, reduceMotion, width]);
+  const fillStyle = useAnimatedStyle(() => ({ width: `${width.value * 100}%` }));
   const hpText = `${formatNumber(hp)} / ${formatNumber(maxHp)} HP`;
   return (
     <View style={styles.bossCard}>
@@ -38,7 +55,7 @@ export function BossCard({ name, hp, maxHp, sprite, defeated }: BossCardProps) {
         accessibilityValue={{ text: hpText }}
         style={styles.bossTrack}
       >
-        <View style={[styles.bossFill, { width: `${fraction * 100}%` }]} />
+        <Animated.View style={[styles.bossFill, fillStyle]} />
       </View>
       <View style={styles.bossFooter}>
         <Text style={styles.bossMeta}>{hpText}</Text>
