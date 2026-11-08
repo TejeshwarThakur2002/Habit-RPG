@@ -34,8 +34,10 @@ export async function runSync(
     if (request.import?.done) await finishImport(tx, userId, now as Date);
     const pulled = await pullChanges(tx, userId, request.cursor);
     const [hero] = await tx`
-      select *, last_closed_date::text as last_closed_date
-      from public.characters where user_id = ${userId}`;
+      select c.*, c.last_closed_date::text as last_closed_date,
+        (select count(*)::int from public.character_events e
+          where e.user_id = c.user_id and e.kind = 'boss_reward') as bosses_beaten
+      from public.characters c where c.user_id = ${userId}`;
     return {
       cursor: pulled.cursor,
       has_more: pulled.hasMore,

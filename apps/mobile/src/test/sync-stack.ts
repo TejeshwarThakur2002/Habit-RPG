@@ -6,7 +6,14 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { syncRefusalSchema, type SyncRequest } from '@habit-rpg/shared';
+import {
+  partyStateSchema,
+  syncRefusalSchema,
+  type PartyRequest,
+  type PartyState,
+  type SyncRequest,
+} from '@habit-rpg/shared';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import type { SyncTransport, TransportResult } from '../sync/engine';
 
@@ -130,4 +137,45 @@ export async function serverRows<T>(table: string, account: TestAccount, select:
   );
   if (!res.ok) throw new Error(`Reading ${table} failed: ${res.status}`);
   return (await res.json()) as T[];
+}
+
+/** One `party` action over HTTP: the snapshot, or the refusal code (D57). */
+export async function partyCall(
+  account: TestAccount,
+  request: PartyRequest,
+): Promise<{ state: PartyState } | { error: string }> {
+  const res = await fetch(`${stack.API_URL}/functions/v1/party`, {
+    method: 'POST',
+    headers: {
+      apikey: stack.ANON_KEY,
+      Authorization: `Bearer ${account.token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+  const body: unknown = await res.json();
+  if (res.ok) return { state: partyStateSchema.parse(body) };
+  return { error: syncRefusalSchema.parse(body).error };
+}
+
+/** Sets a boss's HP with the service key, so a test can reach the victory quickly. */
+export async function setBossHp(bossWeekId: string, hp: number): Promise<void> {
+  const res = await fetch(`${stack.API_URL}/rest/v1/boss_weeks?id=eq.${bossWeekId}`, {
+    method: 'PATCH',
+    headers: { ...admin, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ current_hp: hp }),
+  });
+  if (!res.ok) throw new Error(`Setting the boss's HP failed: ${res.status}`);
+}
+
+/**
+ * A Realtime client signed in as the account, as the app's is (D63). `setAuth` is async: a
+ * channel joined before it settles joins as the anonymous role and hears nothing (D64).
+ */
+export async function realtimeClient(account: TestAccount): Promise<SupabaseClient> {
+  const client = createClient(stack.API_URL, stack.ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  await client.realtime.setAuth(account.token);
+  return client;
 }

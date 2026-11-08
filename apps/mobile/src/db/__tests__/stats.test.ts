@@ -85,6 +85,8 @@ describe('getStats', () => {
     seedDemo(db, { now: NOW, timeZone: TZ, newId });
     const stats = getStats(db, user, TODAY);
     expect(stats?.streak).toBe(12);
+    // Trophies come from the hero, not from the one boss the phone stores (D64).
+    expect(stats?.bossesBeaten).toBe(2);
     expect(stats?.heatmap.some((n) => n > 0)).toBe(true);
     expect(stats?.habitRates.length).toBeGreaterThan(0);
   });

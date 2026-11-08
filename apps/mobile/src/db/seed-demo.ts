@@ -69,6 +69,7 @@ export function seedDemo(db: AppDb, { now, timeZone, newId }: SeedOptions): void
         currentStreak: 12,
         longestStreak: 16,
         lastClosedDate: addDays(today, -1),
+        bossesBeaten: 2,
       })
       .run();
 

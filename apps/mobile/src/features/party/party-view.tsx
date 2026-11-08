@@ -174,7 +174,7 @@ function InParty(props: {
           )}
           <Button
             label={busy ? 'Leaving…' : 'Leave party'}
-            variant="ghost"
+            variant="danger"
             disabled={busy}
             onPress={() =>
               confirmLeave(party.name, () => void onLeave('').then((error) => setFailure(error)))

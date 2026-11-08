@@ -9,7 +9,7 @@ env:
 - stopApp
 - openLink: ${APP_URL}
 - extendedWaitUntil:
-    visible: 'Quests tab|Start without an account|Step 1 of 3'
+    visible: 'Quests tab|You fainted!|Start without an account|Step 1 of 3'
     timeout: 60000
 - runFlow: subflows/start-fresh-hero.yaml
 

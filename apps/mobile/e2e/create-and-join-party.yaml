@@ -1,0 +1,95 @@
+# SCOPE.md P5: "a Maestro flow for create and join". A fresh hero links an account from the
+# Party tab (its code read from the local stack's Mailpit), creates a party, copies the invite
+# code, leaves, and joins again by pasting it. Needs `pnpm supabase:start` and
+# `pnpm functions:serve` as well as the dev server (D64).
+appId: host.exp.Exponent
+name: Create a party, then join it with its code
+env:
+  APP_URL: exp://127.0.0.1:8095
+  MAILPIT: http://127.0.0.1:54324
+---
+- stopApp
+- openLink: ${APP_URL}
+- extendedWaitUntil:
+    visible: 'Quests tab|You fainted!|Start without an account|Step 1 of 3'
+    timeout: 60000
+- runFlow: subflows/start-fresh-hero.yaml
+- tapOn:
+    id: 'hero-name'
+- inputText: 'Maestro'
+- tapOn: 'Next'
+- tapOn: 'Next'
+- tapOn: 'Begin your adventure'
+- extendedWaitUntil:
+    visible: 'Maestro, a level 1 knight'
+    timeout: 15000
+
+# Parties live on the server, so the tab asks for an account first (D60).
+- tapOn: 'Party tab'
+- assertVisible: 'Parties need an account'
+- tapOn: 'Link an account'
+- runScript:
+    file: scripts/new-email.js
+- tapOn:
+    id: 'email'
+- inputText: ${output.email}
+- tapOn: 'Send code'
+- extendedWaitUntil:
+    visible: 'Check your email'
+    timeout: 15000
+- retry:
+    maxRetries: 5
+    commands:
+      - runScript:
+          file: scripts/mailpit-code.js
+          env:
+            MAILPIT: ${MAILPIT}
+            EMAIL: ${output.email}
+      - assertTrue: ${output.code != null}
+- tapOn:
+    id: 'code'
+- inputText: ${output.code}
+
+# Create a party: the boss, the damage card and the invite code appear.
+- extendedWaitUntil:
+    visible: 'Create a party'
+    timeout: 30000
+- tapOn:
+    id: 'party-name'
+- inputText: 'Owls'
+- tapOn: 'Create a party'
+- tapOn: 'Create party'
+- extendedWaitUntil:
+    visible: 'Party damage this week'
+    timeout: 15000
+- assertVisible: 'Owls'
+- assertVisible: 'Maestro \(you\), 0 damage this week'
+- assertVisible: 'Procrastination Slime'
+
+# Copy the code with the app's own button, leave, and join again by pasting it. Scrolled to
+# the middle: an element merely on screen can still be under the tab bar.
+- scrollUntilVisible:
+    element: 'Copy'
+    centerElement: true
+- tapOn: 'Copy'
+- assertVisible: 'Code copied'
+- scrollUntilVisible:
+    element: 'Leave party'
+    centerElement: true
+- tapOn: 'Leave party'
+- tapOn:
+    text: 'Leave'
+    rightOf: 'Cancel'
+- extendedWaitUntil:
+    visible: 'Join with a code'
+    timeout: 15000
+- longPressOn:
+    id: 'party-code'
+- tapOn: 'Paste'
+- tapOn: 'Join with a code'
+- tapOn: 'Join party'
+- extendedWaitUntil:
+    visible: 'Party damage this week'
+    timeout: 15000
+- assertVisible: 'Owls'
+- assertVisible: 'Maestro joined the party.*'

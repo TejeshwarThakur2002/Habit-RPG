@@ -194,6 +194,7 @@ export function applyResponse(
       currentStreak: c.current_streak,
       longestStreak: c.longest_streak,
       lastClosedDate: c.last_closed_date,
+      bossesBeaten: c.bosses_beaten,
     };
     // The server's hero replaces the phone's estimate (section 8.3).
     tx.insert(t.characters)

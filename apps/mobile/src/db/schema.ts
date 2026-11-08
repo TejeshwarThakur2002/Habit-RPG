@@ -46,6 +46,8 @@ export const characters = sqliteTable('characters', {
   currentStreak: integer('current_streak').notNull().default(0),
   longestStreak: integer('longest_streak').notNull().default(0),
   lastClosedDate: text('last_closed_date'),
+  /** Boss rewards claimed, as the server counts them (D64). */
+  bossesBeaten: integer('bosses_beaten').notNull().default(0),
 });
 
 export const habits = sqliteTable(

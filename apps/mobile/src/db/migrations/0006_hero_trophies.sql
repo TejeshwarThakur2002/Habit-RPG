@@ -1,0 +1,1 @@
+ALTER TABLE `characters` ADD `bosses_beaten` integer DEFAULT 0 NOT NULL;

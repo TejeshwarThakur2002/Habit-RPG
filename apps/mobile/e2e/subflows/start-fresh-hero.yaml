@@ -2,16 +2,19 @@
 # signs out of any hero, then starts a local one. A run stopped mid-onboarding is already there.
 appId: host.exp.Exponent
 ---
+# A hero left for days may have fainted at day close; its dialog covers the tabs (F4).
+- runFlow:
+    when:
+      visible: 'You fainted!'
+    commands:
+      - tapOn: 'Continue'
 - runFlow:
     when:
       visible: 'Quests tab'
     commands:
-      - tapOn: 'Stats tab'
-      # Stats keeps its scroll position, so the header gear may be off screen.
-      - scrollUntilVisible:
-          element: 'Settings'
-          direction: UP
-      - tapOn: 'Settings'
+      # Settings by its link: after a cold start Expo Go's floating tools button sits on top of
+      # the Stats gear and takes the tap.
+      - openLink: exp://127.0.0.1:8095/--/modal/settings
       - scrollUntilVisible:
           element: 'Leave the demo|Sign out'
       - tapOn: 'Leave the demo|Sign out'

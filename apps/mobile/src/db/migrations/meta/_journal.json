@@ -43,6 +43,13 @@
       "when": 1793088282334,
       "tag": "0005_party_snapshot",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794125349164,
+      "tag": "0006_hero_trophies",
+      "breakpoints": true
     }
   ]
 }

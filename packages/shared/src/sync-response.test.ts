@@ -49,6 +49,7 @@ const response = {
     current_streak: 1,
     longest_streak: 3,
     last_closed_date: '2026-10-22',
+    bosses_beaten: 0,
   },
   applied: [ID, 'me'],
   rejected: [{ id: ID, table: 'inventory', reason: 'insufficient_gold' }],
