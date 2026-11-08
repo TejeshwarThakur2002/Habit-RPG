@@ -220,9 +220,13 @@ test('the reward goes once to each member who saw the boss fall, through the eve
     assertEquals(paid.json.party.claimed, true);
     const after = await sync(b!, []);
     assertEquals(after.character.gold, before + 50);
+    // A trophy, counted from the hero's event log: once, and not for the member who hasn't claimed.
+    assertEquals(after.character.bosses_beaten, 1);
     assertEquals((await replayed(b!.id)).gold, after.character.gold);
     assertEquals((await claim(b!)).json.error, 'already_claimed');
     assertEquals((await claim(a!)).status, 200);
+    assertEquals((await sync(b!, [])).character.bosses_beaten, 1);
+    assertEquals((await sync(a!, [])).character.bosses_beaten, 1);
 
     // Someone who joins after the victory can't claim it; a stranger can't see it.
     const late = await newUser();

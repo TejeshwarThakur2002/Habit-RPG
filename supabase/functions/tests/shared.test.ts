@@ -70,6 +70,7 @@ Deno.test('an empty response parses', () => {
       current_streak: 0,
       longest_streak: 0,
       last_closed_date: null,
+      bosses_beaten: 0,
     },
     applied: [],
     rejected: [],

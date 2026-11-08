@@ -112,6 +112,7 @@ export function characterOf(row: Row | undefined): Character {
       current_streak: 0,
       longest_streak: 0,
       last_closed_date: null,
+      bosses_beaten: 0,
     };
   }
   return {
@@ -122,5 +123,6 @@ export function characterOf(row: Row | undefined): Character {
     current_streak: row.current_streak as number,
     longest_streak: row.longest_streak as number,
     last_closed_date: row.last_closed_date as string | null,
+    bosses_beaten: (row.bosses_beaten as number | undefined) ?? 0,
   };
 }

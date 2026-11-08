@@ -35,6 +35,8 @@ export const characterSchema = z.strictObject({
   current_streak: z.int().min(0),
   longest_streak: z.int().min(0),
   last_closed_date: localDate.nullable(),
+  /** Trophies: boss rewards claimed, from the hero's event log, so they outlive the party (D64). */
+  bosses_beaten: z.int().min(0),
 });
 
 // Rows as the server stores them: what the phone sent plus the server's own columns.

@@ -31,6 +31,7 @@ export class FakeSyncServer implements SyncTransport {
     current_streak: 0,
     longest_streak: 0,
     last_closed_date: null,
+    bosses_beaten: 0,
   };
   pageSize = 500;
   /** The account's hero as `hero_exists` names it. */

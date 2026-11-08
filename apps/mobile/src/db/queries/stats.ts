@@ -9,9 +9,9 @@ import {
   monthStart,
   type LocalDate,
 } from '@habit-rpg/game-core';
-import { and, eq, gte, isNotNull, isNull } from 'drizzle-orm';
+import { and, eq, gte, isNull } from 'drizzle-orm';
 
-import { bossWeeks, completions, habits, partyMembers } from '../schema';
+import { completions, habits } from '../schema';
 import type { AppDb } from '../types';
 import { toClosingHabits } from './day-close';
 import { getCharacter, getProfile } from './hero';
@@ -65,7 +65,8 @@ export function getStats(db: AppDb, userId: string, today: LocalDate): Stats | n
   return {
     streak: character.currentStreak,
     monthPercent: completionRate(closing, isDone, monthStart(today), today).percent,
-    bossesBeaten: bossesBeaten(db, userId),
+    // The server's count of boss rewards claimed (D64); the phone keeps only this week's boss.
+    bossesBeaten: character.bossesBeaten,
     heatmap,
     heatmapSummary: heatmapSummary(heatmap),
     habitRates: bestAndWorst(rates),
@@ -92,15 +93,6 @@ function completedDates(db: AppDb, userId: string, since: LocalDate) {
     byHabit.set(row.habitId, set);
   }
   return byHabit;
-}
-
-function bossesBeaten(db: AppDb, userId: string): number {
-  return db
-    .select({ id: bossWeeks.id })
-    .from(bossWeeks)
-    .innerJoin(partyMembers, eq(partyMembers.partyId, bossWeeks.partyId))
-    .where(and(eq(partyMembers.userId, userId), isNotNull(bossWeeks.defeatedAt)))
-    .all().length;
 }
 
 /**

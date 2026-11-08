@@ -55,6 +55,7 @@ describe('the sync engine', () => {
   it('sends the outbox and applies the answer: rows, rewards, hero and cursor', async () => {
     const id = habit();
     const done = completeHabit(db, { userId: user, habitId: id, now: NOW, newId });
+    server.character = { ...server.character, bosses_beaten: 2 };
     const outcome = await engine().syncNow();
 
     expect(outcome).toEqual({ status: 'synced', rejected: [] });
@@ -67,7 +68,7 @@ describe('the sync engine', () => {
     // The server's reward and hero replace the phone's estimate.
     const row = db.select().from(completions).where(eq(completions.id, done!.completionId)).get();
     expect(row).toMatchObject({ xpAwarded: 12, goldAwarded: 4 });
-    expect(getCharacter(db, user)).toMatchObject({ xpInLevel: 12, gold: 4 });
+    expect(getCharacter(db, user)).toMatchObject({ xpInLevel: 12, gold: 4, bossesBeaten: 2 });
     expect(getHabit(db, user, id)?.serverSeq).not.toBeNull();
     expect(getSyncState(db, newId).cursor).toBe(3);
   });

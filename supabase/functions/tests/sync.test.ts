@@ -65,6 +65,7 @@ test('the first push creates the server profile and a brand-new hero', async () 
       current_streak: 0,
       longest_streak: 0,
       last_closed_date: null,
+      bosses_beaten: 0,
     });
 
     // Nothing new since that cursor; then a rename comes back with a higher server_seq.
