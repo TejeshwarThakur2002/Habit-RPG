@@ -3,7 +3,7 @@
 -- deleting accounts hold.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(26);
 
 -- A and B are in party P; D was in P and left; C is in party Q. Written as the database owner.
 insert into auth.users (id, email) values
@@ -115,9 +115,21 @@ select is_empty(
   'deleting an account removes its membership and claims'
 );
 select is(
-  (select count(*)::int from public.party_events where user_id = '00000000-0000-0000-0000-0000000000b1'),
+  (select count(*)::int from public.party_events
+    where party_id = '40000000-0000-0000-0000-0000000000a0' and kind = 'damage' and amount = 20),
   1,
   'a deleted member''s past damage stays in the log'
+);
+select is_empty(
+  $$select 1 from public.party_events
+    where user_id = '00000000-0000-0000-0000-0000000000b1'
+       or (party_id = '40000000-0000-0000-0000-0000000000a0' and habit_name = 'Read')$$,
+  'but no longer says who dealt it or names their quest'
+);
+select is(
+  (select habit_name from public.party_events where party_id = '40000000-0000-0000-0000-0000000000b0'),
+  'Swim',
+  'other players'' lines are untouched'
 );
 delete from auth.users where id = '00000000-0000-0000-0000-0000000000a1';
 select is(
