@@ -43,5 +43,19 @@ module.exports = defineConfig([
       '@typescript-eslint/no-explicit-any': 'error',
     },
   },
+  {
+    // Maestro runs these in its own JavaScript runtime, which provides these globals plus the
+    // flow's env values (D64).
+    files: ['apps/mobile/e2e/scripts/**/*.js'],
+    languageOptions: {
+      globals: {
+        http: 'readonly',
+        json: 'readonly',
+        output: 'writable',
+        MAILPIT: 'readonly',
+        EMAIL: 'readonly',
+      },
+    },
+  },
   prettierConfig,
 ]);
